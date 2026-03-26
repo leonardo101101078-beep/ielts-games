@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>同義詞消消消</title>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json" />
+
+  <!-- Favicon -->
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="同義詞消消消" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #FAF8F3;
+      --ink:        #1A1A2E;
+      --ink-soft:   #4A4A6A;
+      --ink-faint:  #9898B0;
+      --gold:       #C9A84C;
+      --gold-pale:  #F0E4BC;
+      --green:      #27795A;
+      --green-pale: #EEF8F3;
+      --red:        #B83232;
+      --red-pale:   #FDF0EE;
+      --orange:     #C07020;
+      --orange-pale:#FFF3E0;
+      --card-bg:    #FFFFFF;
+      --radius:     14px;
+      --max-w:      520px;
+    }
+
+    html { height: 100%; }
+
+    body {
+      min-height: 100%;
+      min-height: 100dvh;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, 'system-ui', BlinkMacSystemFont, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    }
+
+    button { touch-action: manipulation; }
+
+    /* ════════════════════════════
+       STICKY HEADER
+    ════════════════════════════ */
+    #game-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      width: 100%;
+      background: var(--bg);
+      padding-top: env(safe-area-inset-top);
+    }
+
+    #progress-wrap {
+      width: 100%;
+      height: 3px;
+      background: #E8E4DA;
+    }
+    #progress-bar {
+      height: 100%;
+      background: var(--gold);
+      transition: width 0.4s ease;
+      width: 0%;
+    }
+
+    #header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 20px 6px;
+      font-size: 0.78rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    #q-counter { font-weight: 600; }
+    #score-display { color: var(--ink-soft); font-weight: 600; }
+    #score-display strong {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--gold);
+      margin-left: 2px;
+    }
+
+    /* ── Timer ring ── */
+    #timer-ring {
+      position: relative;
+      width: 36px;
+      height: 36px;
+      flex-shrink: 0;
+    }
+    #timer-ring svg {
+      width: 36px;
+      height: 36px;
+      transform: rotate(-90deg);
+    }
+    .timer-bg {
+      fill: none;
+      stroke: #E8E4DA;
+      stroke-width: 3;
+    }
+    #timer-arc {
+      fill: none;
+      stroke: var(--gold);
+      stroke-width: 3;
+      stroke-dasharray: 99.9;
+      stroke-dashoffset: 0;
+      stroke-linecap: round;
+      transition: stroke 0.3s;
+    }
+    #timer-arc.warn  { stroke: var(--orange); }
+    #timer-arc.alert { stroke: var(--red); }
+    #timer-num {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--ink-soft);
+      letter-spacing: 0;
+    }
+
+    /* ════════════════════════════
+       SCREENS
+    ════════════════════════════ */
+    .screen {
+      display: none;
+      width: 100%;
+      max-width: var(--max-w);
+      padding: 0 20px;
+      flex: 1;
+    }
+    .screen.active { display: flex; flex-direction: column; }
+
+    /* ════════════════════════════
+       SCREEN 1 — DIFFICULTY
+    ════════════════════════════ */
+    #screen-difficulty {
+      justify-content: center;
+      padding-top: 40px;
+      padding-bottom: 40px;
+    }
+
+    .diff-title {
+      font-family: Georgia, serif;
+      font-size: clamp(1.5rem, 5vw, 2.2rem);
+      font-weight: normal;
+      text-align: center;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    .diff-subtitle {
+      text-align: center;
+      font-size: 0.8rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 36px;
+    }
+
+    .diff-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .diff-card {
+      width: 100%;
+      padding: 20px 22px;
+      background: var(--card-bg);
+      border: 1.5px solid #E0DAD0;
+      border-radius: var(--radius);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.18s, box-shadow 0.18s, transform 0.12s;
+      position: relative;
+      overflow: hidden;
+    }
+    .diff-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 4px;
+      border-radius: 4px 0 0 4px;
+    }
+    .diff-card[data-level="beginner"]::before     { background: #6DB87A; }
+    .diff-card[data-level="intermediate"]::before { background: var(--gold); }
+    .diff-card[data-level="advanced"]::before     { background: #C05050; }
+
+    .diff-card:hover, .diff-card:focus-visible {
+      border-color: var(--gold);
+      box-shadow: 0 4px 20px rgba(201,168,76,0.18);
+      transform: translateY(-2px);
+    }
+    @media (hover: none) {
+      .diff-card:hover { transform: none; box-shadow: none; }
+      .diff-card:active { opacity: 0.8; }
+    }
+
+    .diff-card-top {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+    .diff-name-zh {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .diff-name-en {
+      font-size: 0.82rem;
+      color: var(--ink-soft);
+      letter-spacing: 0.06em;
+    }
+    .diff-desc {
+      font-size: 0.8rem;
+      color: var(--ink-faint);
+    }
+    .diff-arrow {
+      position: absolute;
+      right: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1.1rem;
+      color: var(--ink-faint);
+    }
+
+    /* Wrong-card (localStorage review) */
+    #wrong-card-wrap { margin-top: 14px; }
+    #wrong-card {
+      width: 100%;
+      padding: 18px 22px;
+      background: var(--card-bg);
+      border: 1.5px solid #E0DAD0;
+      border-left: 4px solid var(--red);
+      border-radius: var(--radius);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      position: relative;
+    }
+    #wrong-card:hover {
+      border-color: var(--red);
+      box-shadow: 0 4px 20px rgba(184,50,50,0.12);
+    }
+    @media (hover: none) { #wrong-card:active { opacity: 0.8; } }
+    #wrong-card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 4px;
+    }
+    #wrong-card-meta {
+      font-size: 0.8rem;
+      color: var(--ink-faint);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #clear-history-btn {
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      background: transparent;
+      border: 1px solid #D8D2C4;
+      border-radius: 6px;
+      padding: 3px 8px;
+      cursor: pointer;
+    }
+    #clear-history-btn:hover { color: var(--red); border-color: var(--red); }
+
+    /* ════════════════════════════
+       SCREEN 2 — GAME
+    ════════════════════════════ */
+    #screen-game {
+      padding-top: 20px;
+      gap: 0;
+    }
+
+    /* Sentence */
+    #sentence-block {
+      background: var(--card-bg);
+      border: 1px solid #E8E4DA;
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      font-size: clamp(0.88rem, 2.2vw, 1rem);
+      line-height: 1.7;
+      color: var(--ink-soft);
+      margin-bottom: 16px;
+    }
+    #sentence-block .target-word {
+      color: var(--gold);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      font-weight: 600;
+    }
+
+    /* Base word card */
+    #base-word-card {
+      background: var(--ink);
+      color: var(--bg);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #base-word {
+      font-family: Georgia, serif;
+      font-size: clamp(1.8rem, 6vw, 2.8rem);
+      font-weight: normal;
+      letter-spacing: -0.01em;
+      line-height: 1.1;
+    }
+    #base-word-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+      margin-top: 4px;
+    }
+
+    /* Instruction */
+    #game-instruction {
+      font-size: 0.78rem;
+      color: var(--ink-faint);
+      letter-spacing: 0.06em;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    /* Options grid */
+    #options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    @media (min-width: 480px) {
+      #options-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .opt-btn {
+      min-height: 52px;
+      padding: 12px 10px;
+      background: var(--card-bg);
+      border: 1.5px solid #D8D2C4;
+      border-radius: var(--radius);
+      color: var(--ink);
+      font-family: Georgia, serif;
+      font-size: clamp(0.9rem, 2.4vw, 1.05rem);
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s;
+      line-height: 1.3;
+      word-break: break-word;
+    }
+    .opt-btn:hover:not(:disabled) {
+      border-color: var(--gold);
+      box-shadow: 0 2px 12px rgba(201,168,76,0.15);
+    }
+    @media (hover: none) {
+      .opt-btn:hover { border-color: #D8D2C4; box-shadow: none; }
+      .opt-btn:active:not(:disabled) { opacity: 0.75; }
+    }
+    .opt-btn.selected {
+      border-color: var(--gold);
+      background: var(--gold-pale);
+      color: #7A5A10;
+    }
+    .opt-btn.reveal-correct {
+      border-color: var(--green);
+      background: var(--green-pale);
+      color: var(--green);
+    }
+    .opt-btn.reveal-wrong {
+      border-color: var(--red);
+      background: var(--red-pale);
+      color: var(--red);
+    }
+    .opt-btn.reveal-missed {
+      border-color: var(--orange);
+      background: var(--orange-pale);
+      color: var(--orange);
+    }
+    .opt-btn:disabled { cursor: default; }
+
+    /* Confirm button */
+    #confirm-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--ink);
+      color: var(--bg);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.18s, transform 0.1s;
+      margin-bottom: 12px;
+    }
+    #confirm-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+    #confirm-btn:not(:disabled):hover { opacity: 0.85; }
+    #confirm-btn:not(:disabled):active { transform: scale(0.98); }
+
+    /* Next button */
+    #next-btn {
+      width: 100%;
+      padding: 15px;
+      background: transparent;
+      color: var(--gold);
+      border: 1.5px solid var(--gold);
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: none;
+      transition: background 0.18s, color 0.18s;
+    }
+    #next-btn.visible { display: block; }
+    #next-btn:hover { background: var(--gold); color: #fff; }
+    @media (hover: none) {
+      #next-btn:active { background: var(--gold); color: #fff; }
+    }
+
+    /* Feedback line */
+    #feedback {
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      text-align: center;
+      min-height: 1.3rem;
+      margin-bottom: 14px;
+      transition: opacity 0.2s;
+      opacity: 0;
+    }
+    #feedback.visible { opacity: 1; }
+
+    /* ════════════════════════════
+       SCREEN 3 — END / REVIEW
+    ════════════════════════════ */
+    #screen-end {
+      padding-top: 28px;
+      padding-bottom: 40px;
+      gap: 0;
+    }
+
+    /* Score summary */
+    #score-summary {
+      text-align: center;
+      padding: 28px 20px;
+      margin-bottom: 24px;
+    }
+    #score-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 6px;
+    }
+    #score-band {
+      font-family: Georgia, serif;
+      font-size: clamp(3.5rem, 14vw, 5.5rem);
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    #score-band-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 12px;
+    }
+    #score-tier {
+      font-size: 1.1rem;
+      font-family: Georgia, serif;
+      color: var(--ink);
+      margin-bottom: 6px;
+    }
+    #score-desc {
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      line-height: 1.6;
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
+    /* Review section title */
+    .review-section-title {
+      font-size: 0.72rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 12px;
+      padding-left: 4px;
+    }
+
+    /* Review cards */
+    #review-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .review-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      border: 1px solid #E8E4DA;
+      border-left-width: 4px;
+      padding: 16px 16px 16px 18px;
+      overflow: hidden;
+    }
+    .review-card.correct { border-left-color: var(--green); }
+    .review-card.wrong   { border-left-color: var(--red); }
+
+    .review-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .review-q-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-soft);
+    }
+    .review-result-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 2px 8px;
+      border-radius: 99px;
+    }
+    .review-card.correct .review-result-badge {
+      background: var(--green-pale);
+      color: var(--green);
+    }
+    .review-card.wrong .review-result-badge {
+      background: var(--red-pale);
+      color: var(--red);
+    }
+
+    .review-sentence {
+      font-size: 0.88rem;
+      line-height: 1.65;
+      color: var(--ink-soft);
+      margin-bottom: 12px;
+    }
+    .review-sentence .target-word {
+      color: var(--gold);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .review-answers {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+      font-size: 0.82rem;
+    }
+    .review-answer-row {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .review-answer-label {
+      color: var(--ink-faint);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .review-answer-words { color: var(--ink); }
+    .review-answer-words.miss { color: var(--red); }
+
+    .review-explanation {
+      font-size: 0.8rem;
+      color: var(--ink-soft);
+      line-height: 1.6;
+      padding-top: 10px;
+      border-top: 1px solid #EEEAE0;
+    }
+    .review-explanation::before {
+      content: '解析 ';
+      font-weight: 600;
+      color: var(--ink-faint);
+      letter-spacing: 0.04em;
+    }
+
+    /* Restart */
+    #restart-btn {
+      width: 100%;
+      padding: 15px;
+      background: var(--ink);
+      color: var(--bg);
+      border: none;
+      border-radius: var(--radius);
+      font-size: 0.88rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: opacity 0.18s;
+    }
+    #restart-btn:hover { opacity: 0.82; }
+
+    /* ════════════════════════════
+       ANIMATIONS
+    ════════════════════════════ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.32s ease both; }
+
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-7px); }
+      40%     { transform: translateX(7px); }
+      60%     { transform: translateX(-5px); }
+      80%     { transform: translateX(5px); }
+    }
+    .shake { animation: shake 0.36s ease; }
+
+    /* ════════════════════════════
+       FOOTER
+    ════════════════════════════ */
+    .page-footer {
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #C8C4BC;
+      text-align: center;
+      padding: 20px 0 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sticky header (hidden on difficulty screen) -->
+  <header id="game-header" style="display:none">
+    <div id="progress-wrap"><div id="progress-bar"></div></div>
+    <div id="header-row">
+      <span id="q-counter">第 1 題 / 共 10 題</span>
+      <div id="timer-ring">
+        <svg viewBox="0 0 36 36">
+          <circle class="timer-bg" cx="18" cy="18" r="15.9"/>
+          <circle id="timer-arc"  cx="18" cy="18" r="15.9"/>
+        </svg>
+        <span id="timer-num">10</span>
+      </div>
+      <span id="score-display"><strong id="score-val">0</strong> / 10</span>
+    </div>
+  </header>
+
+  <!-- ── Screen 1: Difficulty ── -->
+  <section id="screen-difficulty" class="screen active">
+    <h1 class="diff-title">Synonym Elimination</h1>
+    <p class="diff-subtitle">IELTS Vocabulary Training</p>
+    <div class="diff-cards">
+      <button class="diff-card" data-level="beginner" aria-label="初階">
+        <div class="diff-card-top">
+          <span class="diff-name-zh">初階</span>
+          <span class="diff-name-en">Beginner · Band 4–5</span>
+        </div>
+        <p class="diff-desc">基礎動詞與形容詞替換</p>
+        <span class="diff-arrow">›</span>
+      </button>
+      <button class="diff-card" data-level="intermediate" aria-label="中階">
+        <div class="diff-card-top">
+          <span class="diff-name-zh">中階</span>
+          <span class="diff-name-en">Intermediate · Band 6–7</span>
+        </div>
+        <p class="diff-desc">學術詞彙辨析與語境替換</p>
+        <span class="diff-arrow">›</span>
+      </button>
+      <button class="diff-card" data-level="advanced" aria-label="高階">
+        <div class="diff-card-top">
+          <span class="diff-name-zh">高階</span>
+          <span class="diff-name-en">Advanced · Band 8–9</span>
+        </div>
+        <p class="diff-desc">精確語境替換與搭配詞辨析</p>
+        <span class="diff-arrow">›</span>
+      </button>
+    </div>
+    <div id="wrong-card-wrap" style="display:none">
+      <div id="wrong-card">
+        <div id="wrong-card-title">錯題回顧</div>
+        <div id="wrong-card-meta">
+          <span id="wrong-card-count"></span>
+          <button id="clear-history-btn" onclick="event.stopPropagation(); clearHistory()">清除記錄</button>
+        </div>
+      </div>
+    </div>
+    <p class="page-footer">每次從選定難度隨機抽取 10 題</p>
+  </section>
+
+  <!-- ── Screen 2: Game ── -->
+  <section id="screen-game" class="screen">
+    <div id="sentence-block" class="fade-up"></div>
+    <div id="base-word-card" class="fade-up">
+      <div id="base-word"></div>
+      <div id="base-word-label">Target Word</div>
+    </div>
+    <p id="game-instruction">選出所有可在此句中替換目標單字的詞</p>
+    <div id="options-grid"></div>
+    <p id="feedback"></p>
+    <button id="confirm-btn" disabled>確認送出</button>
+    <button id="next-btn">下一題 →</button>
+  </section>
+
+  <!-- ── Screen 3: End / Review ── -->
+  <section id="screen-end" class="screen">
+    <div id="score-summary">
+      <p id="score-label">本次成績</p>
+      <div id="score-band"></div>
+      <p id="score-band-label">/ 10 分</p>
+      <p id="score-tier"></p>
+      <p id="score-desc"></p>
+    </div>
+    <p class="review-section-title">題目解析</p>
+    <div id="review-list"></div>
+    <button id="restart-btn">選擇難度 / 再玩一次</button>
+  </section>
+
+  <script>
+  /* ═══════════════════════════════════════════════
+     WORD DATABASE — 120 questions, 3 levels × 40
+     素材來源：IELTS 閱讀538考點詞（reading538words.js）
+  ═══════════════════════════════════════════════ */
+  const DB = [
+
+    /* ── BEGINNER ── */
+    {
+      level: "beginner",
+      word: "important",
+      sentence: `Climate change is an <span class="target-word">important</span> issue that requires immediate action from all governments.`,
+      correct: ["crucial", "significant", "vital"],
+      distractors: ["trivial", "minor"],
+      explanation: "crucial、significant、vital 均可在學術語境中表達高度重要性，適合替換 important 用於論文寫作。"
+    },
+    {
+      level: "beginner",
+      word: "show",
+      sentence: `The experiment results <span class="target-word">show</span> that the new drug is effective in reducing symptoms.`,
+      correct: ["demonstrate", "indicate", "reveal"],
+      distractors: ["conceal", "contradict"],
+      explanation: "demonstrate、indicate、reveal 在學術文章中均可描述研究結果所呈現的訊息，語氣比 show 更正式。"
+    },
+    {
+      level: "beginner",
+      word: "get",
+      sentence: `Researchers hope to <span class="target-word">get</span> more funding for this long-term environmental project.`,
+      correct: ["obtain", "acquire", "secure"],
+      distractors: ["lose", "donate"],
+      explanation: "obtain、acquire、secure 均表示透過努力取得某事物，是 get 在學術寫作中的正式替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "big",
+      sentence: `The discovery had a <span class="target-word">big</span> impact on our understanding of the human genome.`,
+      correct: ["significant", "substantial", "profound"],
+      distractors: ["tiny", "negligible"],
+      explanation: "significant、substantial、profound 皆可強調影響程度之深，是修飾名詞 impact 時更學術的用法。"
+    },
+    {
+      level: "beginner",
+      word: "help",
+      sentence: `Technology can <span class="target-word">help</span> developing nations improve their healthcare infrastructure.`,
+      correct: ["assist", "aid", "enable"],
+      distractors: ["hinder", "obstruct"],
+      explanation: "assist、aid、enable 均表達提供協助或創造條件，比 help 在正式文章中更具說服力。"
+    },
+    {
+      level: "beginner",
+      word: "use",
+      sentence: `Scientists <span class="target-word">use</span> various methods to collect and analyze climate data.`,
+      correct: ["employ", "utilize", "apply"],
+      distractors: ["ignore", "abandon"],
+      explanation: "employ、utilize、apply 均表示有目的地使用某方法或工具，是學術寫作中替換 use 的標準用詞。"
+    },
+    {
+      level: "beginner",
+      word: "end",
+      sentence: `The negotiators hope to <span class="target-word">end</span> the dispute through diplomatic dialogue.`,
+      correct: ["resolve", "conclude", "settle"],
+      distractors: ["prolong", "intensify"],
+      explanation: "resolve、conclude、settle 均表示使問題達到完結，語氣比 end 更精確且正式。"
+    },
+    {
+      level: "beginner",
+      word: "think",
+      sentence: `Many experts <span class="target-word">think</span> that renewable energy is the most viable long-term solution.`,
+      correct: ["believe", "argue", "contend"],
+      distractors: ["doubt", "deny"],
+      explanation: "believe、argue、contend 在學術寫作中用來表達學者的立場或觀點，比 think 更具說服力。"
+    },
+    {
+      level: "beginner",
+      word: "change",
+      sentence: `Economic pressures have begun to <span class="target-word">change</span> traditional social structures in rural communities.`,
+      correct: ["alter", "transform", "reshape"],
+      distractors: ["preserve", "maintain"],
+      explanation: "alter、transform、reshape 均表示使某物產生變化，各有細微語氣差異，適合替換 change 於正式文章。"
+    },
+    {
+      level: "beginner",
+      word: "make",
+      sentence: `Engineers worked together to <span class="target-word">make</span> a prototype of the new solar panel system.`,
+      correct: ["produce", "construct", "develop"],
+      distractors: ["destroy", "remove"],
+      explanation: "produce、construct、develop 均表示創建或製造某物，語氣比 make 更學術，適合描述研究成果。"
+    },
+
+    /* ── INTERMEDIATE ── */
+    {
+      level: "intermediate",
+      word: "increase",
+      sentence: `The report shows a steady <span class="target-word">increase</span> in carbon emissions over the past two decades.`,
+      correct: ["rise", "surge", "escalation"],
+      distractors: ["decline", "reduction"],
+      explanation: "rise、surge、escalation 均描述數量或程度的上升，surge 和 escalation 語氣更強烈，常用於描述快速或急劇的增加。"
+    },
+    {
+      level: "intermediate",
+      word: "problem",
+      sentence: `Overpopulation remains a serious <span class="target-word">problem</span> in many developing regions of the world.`,
+      correct: ["challenge", "issue", "concern"],
+      distractors: ["solution", "advantage"],
+      explanation: "challenge、issue、concern 均可替換 problem 表達困難或值得關注的事項，且在學術語境中語氣更中性客觀。"
+    },
+    {
+      level: "intermediate",
+      word: "difficult",
+      sentence: `It is <span class="target-word">difficult</span> to predict the long-term consequences of rapid urbanization.`,
+      correct: ["challenging", "complex", "demanding"],
+      distractors: ["straightforward", "simple"],
+      explanation: "challenging、complex、demanding 均可替換 difficult，其中 complex 強調複雜性，demanding 強調需要高度能力或資源。"
+    },
+    {
+      level: "intermediate",
+      word: "different",
+      sentence: `Researchers identified several <span class="target-word">different</span> factors that contribute to income inequality.`,
+      correct: ["distinct", "diverse", "varied"],
+      distractors: ["identical", "uniform"],
+      explanation: "distinct、diverse、varied 均表示事物間的差異，distinct 強調明確區別，diverse 強調多樣性，varied 強調種類繁多。"
+    },
+    {
+      level: "intermediate",
+      word: "find",
+      sentence: `Scientists were the first to <span class="target-word">find</span> evidence of water beneath the surface of Mars.`,
+      correct: ["discover", "identify", "detect"],
+      distractors: ["overlook", "miss"],
+      explanation: "discover、identify、detect 在科學語境中均可替換 find，detect 常用於儀器偵測，identify 強調辨別確認。"
+    },
+    {
+      level: "intermediate",
+      word: "cause",
+      sentence: `Prolonged drought can <span class="target-word">cause</span> widespread food shortages in vulnerable regions.`,
+      correct: ["trigger", "generate", "induce"],
+      distractors: ["prevent", "resolve"],
+      explanation: "trigger、generate、induce 均表示引發某種結果，trigger 強調觸發點，induce 較正式，generate 多用於抽象結果。"
+    },
+    {
+      level: "intermediate",
+      word: "affect",
+      sentence: `Rising sea levels will <span class="target-word">affect</span> millions of people living in coastal areas.`,
+      correct: ["impact", "influence", "alter"],
+      distractors: ["ignore", "bypass"],
+      explanation: "impact、influence、alter 均可表示對某事物產生作用，impact 強調衝擊，influence 偏向間接影響，alter 強調使之改變。"
+    },
+    {
+      level: "intermediate",
+      word: "need",
+      sentence: `The proposed reforms <span class="target-word">need</span> substantial financial investment to be successfully implemented.`,
+      correct: ["require", "demand", "necessitate"],
+      distractors: ["avoid", "eliminate"],
+      explanation: "require、demand、necessitate 均表示需要某條件，necessitate 最正式，demand 語氣最強，require 最通用。"
+    },
+    {
+      level: "intermediate",
+      word: "support",
+      sentence: `Recent data <span class="target-word">support</span> the theory that diet plays a key role in mental health.`,
+      correct: ["substantiate", "corroborate", "validate"],
+      distractors: ["refute", "contradict"],
+      explanation: "substantiate、corroborate、validate 均表示以證據支持某論點，比 support 更具學術說服力，常見於研究論文。"
+    },
+    {
+      level: "intermediate",
+      word: "explain",
+      sentence: `The professor used diagrams to <span class="target-word">explain</span> the complex mechanisms of neural pathways.`,
+      correct: ["illustrate", "elucidate", "clarify"],
+      distractors: ["obscure", "confuse"],
+      explanation: "illustrate、elucidate、clarify 均可替換 explain，elucidate 最正式，illustrate 強調以例子說明，clarify 強調消除疑惑。"
+    },
+
+    /* ── BEGINNER · Extended (from IELTS Reading 538 Keywords) ── */
+    {
+      level: "beginner",
+      word: "avoid",
+      sentence: `Governments should <span class="target-word">avoid</span> policies that widen the gap between rich and poor citizens.`,
+      correct: ["prevent", "evade", "escape"],
+      distractors: ["seek", "embrace"],
+      explanation: "prevent、evade、escape 均可在學術語境中替換 avoid，表示不讓某事發生或設法脫離某情況。（出處：538考點詞 #24）"
+    },
+    {
+      level: "beginner",
+      word: "abandon",
+      sentence: `Many young people choose to <span class="target-word">abandon</span> traditional career paths in favour of entrepreneurship.`,
+      correct: ["give up", "forsake", "relinquish"],
+      distractors: ["pursue", "embrace"],
+      explanation: "give up、forsake、relinquish 均表示放棄或捨棄某事物，是 abandon 在學術文章中的正式替換詞。（出處：538考點詞 #109）"
+    },
+    {
+      level: "beginner",
+      word: "detect",
+      sentence: `New imaging technology can <span class="target-word">detect</span> early signs of disease far more accurately than older methods.`,
+      correct: ["identify", "discover", "find"],
+      distractors: ["conceal", "overlook"],
+      explanation: "identify、discover、find 均可表達查明或發現某事物，是 detect 在科學語境中的常見替換詞。（出處：538考點詞 #22）"
+    },
+    {
+      level: "beginner",
+      word: "adjust",
+      sentence: `Companies must <span class="target-word">adjust</span> their strategies in response to rapidly changing market conditions.`,
+      correct: ["modify", "alter", "adapt"],
+      distractors: ["ignore", "maintain"],
+      explanation: "modify、alter、adapt 均表示根據情況改變或調整，是 adjust 在商業與學術語境中的精準替換詞。（出處：538考點詞 #3）"
+    },
+    {
+      level: "beginner",
+      word: "measure",
+      sentence: `Researchers used standardised tests to <span class="target-word">measure</span> the cognitive development of children over time.`,
+      correct: ["assess", "evaluate", "gauge"],
+      distractors: ["ignore", "misrepresent"],
+      explanation: "assess、evaluate、gauge 均可表示對某事物進行評估或量化，是 measure 在研究語境中的精確用詞。（出處：538考點詞 #8）"
+    },
+    {
+      level: "beginner",
+      word: "ignore",
+      sentence: `Urban planners often <span class="target-word">ignore</span> the needs of pedestrians when designing new road systems.`,
+      correct: ["overlook", "neglect", "disregard"],
+      distractors: ["acknowledge", "prioritise"],
+      explanation: "overlook、neglect、disregard 均表示疏忽或未加以關注，是 ignore 在政策與學術語境中的同義詞。（出處：538考點詞 #15）"
+    },
+    {
+      level: "beginner",
+      word: "promote",
+      sentence: `The government introduced new incentives to <span class="target-word">promote</span> the adoption of renewable energy sources.`,
+      correct: ["encourage", "foster", "advance"],
+      distractors: ["restrict", "hinder"],
+      explanation: "encourage、foster、advance 均表示推動或促進某事物的發展，是 promote 的學術替換詞。（出處：538考點詞 #316）"
+    },
+    {
+      level: "beginner",
+      word: "eliminate",
+      sentence: `Vaccination campaigns have helped to <span class="target-word">eliminate</span> several life-threatening infectious diseases worldwide.`,
+      correct: ["eradicate", "remove", "abolish"],
+      distractors: ["spread", "preserve"],
+      explanation: "eradicate、remove、abolish 均表示徹底消除或去除，是 eliminate 在公共衛生語境中的常見替換詞。（出處：538考點詞 #197）"
+    },
+    {
+      level: "beginner",
+      word: "survive",
+      sentence: `Only species that can <span class="target-word">survive</span> extreme temperature variations will remain in the altered habitat.`,
+      correct: ["endure", "persist", "withstand"],
+      distractors: ["perish", "collapse"],
+      explanation: "endure、persist、withstand 均表示在困難條件下持續存活或堅持，是 survive 的學術同義詞。（出處：538考點詞 #77）"
+    },
+    {
+      level: "beginner",
+      word: "threaten",
+      sentence: `Rising pollution levels <span class="target-word">threaten</span> the long-term sustainability of coastal marine ecosystems.`,
+      correct: ["endanger", "jeopardise", "undermine"],
+      distractors: ["protect", "preserve"],
+      explanation: "endanger、jeopardise、undermine 均可表達對某事物造成威脅或危險，是 threaten 的學術同義詞。（出處：538考點詞 #90）"
+    },
+
+    /* ── INTERMEDIATE · Extended (from IELTS Reading 538 Keywords) ── */
+    {
+      level: "intermediate",
+      word: "recognize",
+      sentence: `It is now widely <span class="target-word">recognized</span> that biodiversity loss poses a serious threat to global food security.`,
+      correct: ["acknowledged", "accepted", "perceived"],
+      distractors: ["disputed", "denied"],
+      explanation: "acknowledged、accepted、perceived 均可表示某論點被廣泛認可，是學術寫作中替換 recognized 的精準用詞。（出處：538考點詞 #2）"
+    },
+    {
+      level: "intermediate",
+      word: "distinguish",
+      sentence: `Scientists must <span class="target-word">distinguish</span> between correlation and causation when interpreting experimental data.`,
+      correct: ["differentiate", "separate", "discriminate"],
+      distractors: ["merge", "confuse"],
+      explanation: "differentiate、separate、discriminate 均表示辨別或區分不同事物，是學術寫作中替換 distinguish 的精確用詞。（出處：538考點詞 #37）"
+    },
+    {
+      level: "intermediate",
+      word: "emphasize",
+      sentence: `The report <span class="target-word">emphasizes</span> the urgent need for international cooperation on reducing carbon emissions.`,
+      correct: ["highlight", "stress", "underscore"],
+      distractors: ["minimise", "downplay"],
+      explanation: "highlight、stress、underscore 均表示強調某一重點，適合在論文或報告中替換 emphasize。（出處：538考點詞 #39）"
+    },
+    {
+      level: "intermediate",
+      word: "hinder",
+      sentence: `Poor transport infrastructure can <span class="target-word">hinder</span> economic development in rural regions significantly.`,
+      correct: ["impede", "obstruct", "hamper"],
+      distractors: ["assist", "facilitate"],
+      explanation: "impede、obstruct、hamper 均表示阻礙或妨礙某事物的進展，是 hinder 在學術語境中的正式替換詞。（出處：538考點詞 #43）"
+    },
+    {
+      level: "intermediate",
+      word: "impair",
+      sentence: `Chronic sleep deprivation can seriously <span class="target-word">impair</span> cognitive function and decision-making ability.`,
+      correct: ["diminish", "damage", "undermine"],
+      distractors: ["improve", "strengthen"],
+      explanation: "diminish、damage、undermine 均表示對能力或功能造成損害，是 impair 在醫學與學術語境中的替換詞。（出處：538考點詞 #42）"
+    },
+    {
+      level: "intermediate",
+      word: "analyze",
+      sentence: `Researchers were able to <span class="target-word">analyze</span> decades of climate data to identify long-term warming trends.`,
+      correct: ["examine", "investigate", "evaluate"],
+      distractors: ["ignore", "distort"],
+      explanation: "examine、investigate、evaluate 均可表示對資料進行仔細研究，是 analyze 的常見學術同義詞。（出處：538考點詞 #38）"
+    },
+    {
+      level: "intermediate",
+      word: "integrate",
+      sentence: `Schools are encouraged to <span class="target-word">integrate</span> technology into everyday classroom activities to enhance learning.`,
+      correct: ["combine", "incorporate", "embed"],
+      distractors: ["separate", "isolate"],
+      explanation: "combine、incorporate、embed 均表示將不同要素融合為整體，是 integrate 在教育與學術語境中的替換詞。（出處：538考點詞 #118）"
+    },
+    {
+      level: "intermediate",
+      word: "stimulate",
+      sentence: `The government introduced tax incentives to <span class="target-word">stimulate</span> investment in the technology sector.`,
+      correct: ["encourage", "motivate", "boost"],
+      distractors: ["deter", "suppress"],
+      explanation: "encourage、motivate、boost 均表示促進或激發某種行動或發展，是 stimulate 的常見學術替換詞。（出處：538考點詞 #345）"
+    },
+    {
+      level: "intermediate",
+      word: "accelerate",
+      sentence: `Advances in artificial intelligence are expected to <span class="target-word">accelerate</span> the pace of automation across all industries.`,
+      correct: ["speed up", "hasten", "intensify"],
+      distractors: ["slow down", "halt"],
+      explanation: "speed up、hasten、intensify 均表示加快速度或加強進程，是 accelerate 的常見學術替換詞。（出處：538考點詞 #49）"
+    },
+    {
+      level: "intermediate",
+      word: "distribute",
+      sentence: `The charity works to <span class="target-word">distribute</span> medical supplies to communities affected by natural disasters.`,
+      correct: ["allocate", "dispense", "spread"],
+      distractors: ["collect", "withhold"],
+      explanation: "allocate、dispense、spread 均可表示將資源或物品分發出去，是 distribute 在援助與學術語境中的替換詞。（出處：538考點詞 #187）"
+    },
+
+    /* ── ADVANCED ── */
+    {
+      level: "advanced",
+      word: "weaken",
+      sentence: `Repeated policy failures have begun to <span class="target-word">weaken</span> public trust in democratic institutions.`,
+      correct: ["undermine", "erode", "diminish"],
+      distractors: ["strengthen", "bolster"],
+      explanation: "undermine、erode、diminish 均可替換 weaken，undermine 含有暗中破壞之意，erode 強調漸進性侵蝕，diminish 強調縮減程度。"
+    },
+    {
+      level: "advanced",
+      word: "improve",
+      sentence: `The new algorithm was designed to <span class="target-word">improve</span> the accuracy of predictive models.`,
+      correct: ["enhance", "refine", "optimize"],
+      distractors: ["worsen", "degrade"],
+      explanation: "enhance、refine、optimize 均表示使某事物變得更好，refine 強調精煉，optimize 強調達到最佳狀態，enhance 增強整體品質。"
+    },
+    {
+      level: "advanced",
+      word: "control",
+      sentence: `New legislation aims to <span class="target-word">control</span> the spread of misinformation on social media platforms.`,
+      correct: ["regulate", "curb", "constrain"],
+      distractors: ["liberate", "permit"],
+      explanation: "regulate、curb、constrain 均有管控或限制之意，regulate 偏向以規則管理，curb 強調抑制，constrain 強調施加限制。"
+    },
+    {
+      level: "advanced",
+      word: "spread",
+      sentence: `The researchers studied how invasive species tend to <span class="target-word">spread</span> rapidly across new ecosystems.`,
+      correct: ["proliferate", "disseminate", "propagate"],
+      distractors: ["contain", "suppress"],
+      explanation: "proliferate 強調快速大量繁殖，disseminate 多用於資訊或思想的傳播，propagate 兼有生物繁殖與觀念傳播的用法。"
+    },
+    {
+      level: "advanced",
+      word: "limit",
+      sentence: `Budget constraints will inevitably <span class="target-word">limit</span> the scope of the proposed research programme.`,
+      correct: ["constrain", "restrict", "curtail"],
+      distractors: ["expand", "broaden"],
+      explanation: "constrain、restrict、curtail 均表示縮減或阻止擴大，curtail 強調削減，constrain 強調外在條件的限制，restrict 最通用。"
+    },
+    {
+      level: "advanced",
+      word: "continue",
+      sentence: `Despite mounting criticism, the administration chose to <span class="target-word">continue</span> with the controversial housing policy.`,
+      correct: ["persist", "sustain", "maintain"],
+      distractors: ["cease", "abandon"],
+      explanation: "persist 強調在困難中堅持，sustain 強調維持一定狀態，maintain 強調保持不變，三者語氣各有側重。"
+    },
+    {
+      level: "advanced",
+      word: "agree",
+      sentence: `Most scholars in the field <span class="target-word">agree</span> that cognitive biases significantly distort decision-making processes.`,
+      correct: ["concur", "affirm", "endorse"],
+      distractors: ["oppose", "dispute"],
+      explanation: "concur 表示同意某觀點，affirm 表示正式確認，endorse 表示公開支持，三者均比 agree 更具學術或正式語氣。"
+    },
+    {
+      level: "advanced",
+      word: "argue",
+      sentence: `The authors <span class="target-word">argue</span> that traditional economic models fail to account for environmental costs.`,
+      correct: ["contend", "assert", "posit"],
+      distractors: ["concede", "acknowledge"],
+      explanation: "contend 強調在辯論中主張，assert 強調自信地宣稱，posit 強調提出假設性命題，均是學術寫作中替換 argue 的精準用詞。"
+    },
+    {
+      level: "advanced",
+      word: "reveal",
+      sentence: `Long-term longitudinal studies <span class="target-word">reveal</span> a strong correlation between early education and adult outcomes.`,
+      correct: ["demonstrate", "elucidate", "expose"],
+      distractors: ["conceal", "obscure"],
+      explanation: "demonstrate 強調以證據展示，elucidate 強調使事物變得清晰，expose 強調揭露原本隱藏的訊息，均比 reveal 更具學術語境的精準度。"
+    },
+    {
+      level: "advanced",
+      word: "establish",
+      sentence: `The study seeks to <span class="target-word">establish</span> a causal link between childhood trauma and adult mental health disorders.`,
+      correct: ["determine", "ascertain", "substantiate"],
+      distractors: ["ignore", "undermine"],
+      explanation: "determine 強調確定某事為真，ascertain 強調透過調查確認，substantiate 強調以實質證據支持，均是學術研究中替換 establish 的有力用詞。"
+    },
+
+    /* ── ADVANCED · Extended (from IELTS Reading 538 Keywords) ── */
+    {
+      level: "advanced",
+      word: "erode",
+      sentence: `Repeated policy failures have begun to <span class="target-word">erode</span> public confidence in government institutions.`,
+      correct: ["corrode", "undermine", "degrade"],
+      distractors: ["strengthen", "fortify"],
+      explanation: "corrode、undermine、degrade 均表示漸進性地削弱或破壞，erode 的學術替換詞強調侵蝕過程的持續性。（出處：538考點詞 #115）"
+    },
+    {
+      level: "advanced",
+      word: "induce",
+      sentence: `Prolonged exposure to high stress levels can <span class="target-word">induce</span> a range of serious physical and psychological conditions.`,
+      correct: ["trigger", "provoke", "generate"],
+      distractors: ["prevent", "inhibit"],
+      explanation: "trigger、provoke、generate 均表示引發某種結果或反應，是 induce 在醫學與學術語境中的精準替換詞。（出處：538考點詞 #116）"
+    },
+    {
+      level: "advanced",
+      word: "innate",
+      sentence: `Researchers debate whether language acquisition is an <span class="target-word">innate</span> human capacity or primarily a product of environmental exposure.`,
+      correct: ["inborn", "inherent", "intrinsic"],
+      distractors: ["acquired", "learned"],
+      explanation: "inborn、inherent、intrinsic 均表示天生的或本質上固有的特質，是 innate 在認知科學與語言學中的替換詞。（出處：538考點詞 #95）"
+    },
+    {
+      level: "advanced",
+      word: "exacerbate",
+      sentence: `Urban sprawl tends to <span class="target-word">exacerbate</span> existing social inequalities by concentrating poverty in peripheral areas.`,
+      correct: ["worsen", "intensify", "aggravate"],
+      distractors: ["alleviate", "mitigate"],
+      explanation: "worsen、intensify、aggravate 均表示使某負面情況更加嚴重，是 exacerbate 在社會科學語境中的替換詞，語氣強烈。"
+    },
+    {
+      level: "advanced",
+      word: "predominant",
+      sentence: `English remains the <span class="target-word">predominant</span> language of scientific research and international academic discourse.`,
+      correct: ["dominant", "prevailing", "pervasive"],
+      distractors: ["minor", "subordinate"],
+      explanation: "dominant、prevailing、pervasive 均可形容某事物處於主導或普遍存在的地位，是 predominant 的精準學術替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "contradict",
+      sentence: `The new findings appear to <span class="target-word">contradict</span> the established theory that had been widely accepted for decades.`,
+      correct: ["challenge", "refute", "undermine"],
+      distractors: ["support", "reinforce"],
+      explanation: "challenge、refute、undermine 均可表示與現有論點相矛盾或提出反駁，是 contradict 在學術辯論中的替換詞。（出處：538考點詞邏輯）"
+    },
+    {
+      level: "advanced",
+      word: "incentive",
+      sentence: `Financial <span class="target-word">incentives</span> are often used by governments to encourage businesses to adopt greener practices.`,
+      correct: ["stimulus", "motivation", "catalyst"],
+      distractors: ["deterrent", "obstacle"],
+      explanation: "stimulus、motivation、catalyst 均表示促使某種行為發生的驅動因素，是 incentive 在政策與學術語境中的替換詞。（出處：538考點詞 #86）"
+    },
+    {
+      level: "advanced",
+      word: "attribute",
+      sentence: `Economists <span class="target-word">attribute</span> the sharp rise in housing costs largely to restrictive zoning policies and limited supply.`,
+      correct: ["ascribe", "link", "associate"],
+      distractors: ["dismiss", "detach"],
+      explanation: "ascribe、link、associate 均可表示將某結果歸因於特定因素，是 attribute 在學術研究因果分析中的精準替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "consolidate",
+      sentence: `The merger was intended to <span class="target-word">consolidate</span> market share and reduce competition within the industry.`,
+      correct: ["strengthen", "reinforce", "fortify"],
+      distractors: ["fragment", "dissolve"],
+      explanation: "strengthen、reinforce、fortify 均表示使某事物更加穩固或強大，是 consolidate 在商業與政策語境中的學術替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "trait",
+      sentence: `Resilience is considered a key <span class="target-word">trait</span> in individuals who are able to recover from significant adversity.`,
+      correct: ["characteristic", "feature", "attribute"],
+      distractors: ["deficiency", "flaw"],
+      explanation: "characteristic、feature、attribute 均可指某人或事物的特性，是 trait 在心理學與學術語境中的替換詞。（出處：538考點詞 #9）"
+    },
+
+    /* ── BEGINNER · Round 3 ── */
+    {
+      level: "beginner",
+      word: "require",
+      sentence: `Employers <span class="target-word">require</span> candidates to have at least two years of relevant work experience for the position.`,
+      correct: ["demand", "necessitate", "call for"],
+      distractors: ["avoid", "reject"],
+      explanation: "demand、necessitate、call for 均表示某情況下不可缺少某條件，是 require 在正式語境中的精準替換詞。（出處：538考點詞 #8）"
+    },
+    {
+      level: "beginner",
+      word: "extend",
+      sentence: `The university agreed to <span class="target-word">extend</span> the application deadline by two weeks for international students.`,
+      correct: ["prolong", "lengthen", "expand"],
+      distractors: ["shorten", "reduce"],
+      explanation: "prolong、lengthen、expand 均表示使時間、範圍或空間增加，是 extend 的學術替換詞。（出處：538考點詞 #214）"
+    },
+    {
+      level: "beginner",
+      word: "permit",
+      sentence: `The new law will <span class="target-word">permit</span> local authorities to impose stricter environmental regulations.`,
+      correct: ["allow", "enable", "authorise"],
+      distractors: ["prohibit", "restrict"],
+      explanation: "allow、enable、authorise 均表示給予許可或使某事成為可能，是 permit 的正式替換詞。（出處：538考點詞 #299）"
+    },
+    {
+      level: "beginner",
+      word: "compare",
+      sentence: `Researchers <span class="target-word">compared</span> the academic performance of students from urban and rural backgrounds.`,
+      correct: ["contrast", "juxtapose", "assess"],
+      distractors: ["ignore", "separate"],
+      explanation: "contrast、juxtapose、assess 均可表示對兩個或多個對象進行對比，是 compare 在研究語境中的替換詞。（出處：538考點詞 #152）"
+    },
+    {
+      level: "beginner",
+      word: "settle",
+      sentence: `International mediation helped to <span class="target-word">settle</span> the long-standing trade dispute between the two nations.`,
+      correct: ["resolve", "address", "fix"],
+      distractors: ["create", "escalate"],
+      explanation: "resolve、address、fix 均表示找到方法解決問題或爭端，是 settle 在政治與法律語境中的學術替換詞。（出處：538考點詞 #74）"
+    },
+    {
+      level: "beginner",
+      word: "replace",
+      sentence: `Many industries are beginning to <span class="target-word">replace</span> manual labour with automated robotic systems.`,
+      correct: ["substitute", "displace", "swap out"],
+      distractors: ["retain", "preserve"],
+      explanation: "substitute、displace、swap out 均表示以新的事物取代原有的，是 replace 的常見學術替換詞。（出處：538考點詞 #352）"
+    },
+    {
+      level: "beginner",
+      word: "collect",
+      sentence: `The survey team will <span class="target-word">collect</span> data from households across five different regions of the country.`,
+      correct: ["gather", "accumulate", "compile"],
+      distractors: ["discard", "scatter"],
+      explanation: "gather、accumulate、compile 均表示匯集或整合資料，是 collect 在研究方法語境中的精確替換詞。（出處：538考點詞 #121）"
+    },
+    {
+      level: "beginner",
+      word: "confirm",
+      sentence: `Additional experiments were conducted to <span class="target-word">confirm</span> the accuracy of the initial findings.`,
+      correct: ["verify", "validate", "prove"],
+      distractors: ["deny", "question"],
+      explanation: "verify、validate、prove 均表示以證據或測試確認某陳述為真，是 confirm 在學術語境中的精準替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "consider",
+      sentence: `Regular exercise is widely <span class="target-word">considered</span> one of the most effective ways to maintain long-term mental health.`,
+      correct: ["regarded as", "viewed as", "deemed"],
+      distractors: ["ignored", "doubted"],
+      explanation: "regarded as、viewed as、deemed 均表示對某事物持有某種評估，是 consider 在學術被動語境中的替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "describe",
+      sentence: `The report <span class="target-word">describes</span> the situation as the most severe environmental crisis of the past century.`,
+      correct: ["depicts", "portrays", "characterises"],
+      distractors: ["hides", "distorts"],
+      explanation: "depicts、portrays、characterises 均表示以語言呈現某事物的面貌，是 describe 在分析語境中的正式替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "reduce",
+      sentence: `Regular physical activity can significantly <span class="target-word">reduce</span> the risk of developing cardiovascular diseases later in life.`,
+      correct: ["decrease", "lower", "minimise"],
+      distractors: ["increase", "intensify"],
+      explanation: "decrease、lower、minimise 均表示使數量或程度降低，是 reduce 在健康與學術語境中的精準替換詞。（出處：538考點詞 #326）"
+    },
+    {
+      level: "beginner",
+      word: "protect",
+      sentence: `New legislation was introduced to <span class="target-word">protect</span> the rights of workers in the growing gig economy.`,
+      correct: ["safeguard", "preserve", "defend"],
+      distractors: ["undermine", "threaten"],
+      explanation: "safeguard、preserve、defend 均表示保護某事物免受損害或侵害，是 protect 在法律與政策語境中的學術替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "maintain",
+      sentence: `Government bodies must <span class="target-word">maintain</span> transparency in all public spending decisions.`,
+      correct: ["keep", "preserve", "uphold"],
+      distractors: ["abandon", "neglect"],
+      explanation: "keep、preserve、uphold 均表示持續保持某種狀態或標準，是 maintain 在治理與學術語境中的替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "provide",
+      sentence: `The programme aims to <span class="target-word">provide</span> free vocational training to unemployed young adults in deprived areas.`,
+      correct: ["supply", "offer", "deliver"],
+      distractors: ["withhold", "deny"],
+      explanation: "supply、offer、deliver 均表示給予或提供某種資源或服務，是 provide 在社會政策語境中的精準替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "predict",
+      sentence: `Climate models <span class="target-word">predict</span> that sea levels will rise by up to one metre by the end of this century.`,
+      correct: ["forecast", "project", "foresee"],
+      distractors: ["deny", "overlook"],
+      explanation: "forecast、project、foresee 均表示根據已有資料對未來做出推測，是 predict 在科學語境中的替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "connect",
+      sentence: `The new bridge will <span class="target-word">connect</span> two previously isolated communities and open up new economic opportunities.`,
+      correct: ["link", "join", "unite"],
+      distractors: ["separate", "divide"],
+      explanation: "link、join、unite 均表示將兩個或多個事物結合在一起，是 connect 在基礎建設與學術語境中的替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "prepare",
+      sentence: `Schools have a responsibility to <span class="target-word">prepare</span> students for the challenges of a rapidly changing workforce.`,
+      correct: ["equip", "train", "ready"],
+      distractors: ["mislead", "discourage"],
+      explanation: "equip、train、ready 均表示使某人具備應對未來挑戰的能力，是 prepare 在教育語境中的精準替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "observe",
+      sentence: `Scientists <span class="target-word">observed</span> a significant change in the migration patterns of Arctic birds over the course of a decade.`,
+      correct: ["noticed", "witnessed", "detected"],
+      distractors: ["overlooked", "ignored"],
+      explanation: "noticed、witnessed、detected 均表示注意到或記錄到某現象，是 observe 在科學研究語境中的精確替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "complete",
+      sentence: `Students must <span class="target-word">complete</span> all coursework assignments before they are permitted to sit the final examination.`,
+      correct: ["finish", "accomplish", "fulfil"],
+      distractors: ["abandon", "delay"],
+      explanation: "finish、accomplish、fulfil 均表示達成或結束某項任務，是 complete 在學術與工作語境中的替換詞。"
+    },
+    {
+      level: "beginner",
+      word: "remain",
+      sentence: `Traditional cultural practices often <span class="target-word">remain</span> intact even as societies undergo rapid modernisation.`,
+      correct: ["persist", "endure", "survive"],
+      distractors: ["disappear", "vanish"],
+      explanation: "persist、endure、survive 均表示持續存在或保持某種狀態，是 remain 在學術論述中的常見替換詞。"
+    },
+
+    /* ── INTERMEDIATE · Round 3 ── */
+    {
+      level: "intermediate",
+      word: "generate",
+      sentence: `Solar panels installed on rooftops can <span class="target-word">generate</span> enough electricity to power an entire household.`,
+      correct: ["produce", "yield", "create"],
+      distractors: ["consume", "deplete"],
+      explanation: "produce、yield、create 均表示製造或產生某事物，是 generate 在能源與工程語境中的精確替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "enhance",
+      sentence: `The use of visual aids can greatly <span class="target-word">enhance</span> students' understanding of complex scientific concepts.`,
+      correct: ["improve", "boost", "strengthen"],
+      distractors: ["diminish", "hinder"],
+      explanation: "improve、boost、strengthen 均表示使某事物的質量或效果更好，是 enhance 在教育與學術語境中的替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "obtain",
+      sentence: `Applicants must <span class="target-word">obtain</span> a minimum IELTS score of 6.5 before they can apply for a student visa.`,
+      correct: ["achieve", "attain", "secure"],
+      distractors: ["lose", "forfeit"],
+      explanation: "achieve、attain、secure 均表示透過努力或程序取得某成果，是 obtain 在學術申請語境中的精準替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "monitor",
+      sentence: `Health authorities closely <span class="target-word">monitor</span> infection rates during the early stages of a disease outbreak.`,
+      correct: ["track", "observe", "supervise"],
+      distractors: ["ignore", "overlook"],
+      explanation: "track、observe、supervise 均表示持續追蹤或記錄某事物的變化，是 monitor 在醫療與研究語境中的替換詞。（出處：538考點詞 #273）"
+    },
+    {
+      level: "intermediate",
+      word: "propose",
+      sentence: `The committee <span class="target-word">proposed</span> a series of reforms to modernise the national education curriculum.`,
+      correct: ["suggested", "recommended", "put forward"],
+      distractors: ["rejected", "opposed"],
+      explanation: "suggested、recommended、put forward 均表示提出供他人考慮的建議或計劃，是 propose 在政策語境中的替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "evaluate",
+      sentence: `The report uses several indicators to <span class="target-word">evaluate</span> the long-term effectiveness of the public health initiative.`,
+      correct: ["assess", "appraise", "judge"],
+      distractors: ["ignore", "overlook"],
+      explanation: "assess、appraise、judge 均表示對某事物的品質或效果進行系統性判斷，是 evaluate 在研究與政策語境中的替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "contribute",
+      sentence: `Industrial agriculture has been shown to <span class="target-word">contribute</span> significantly to the loss of natural habitats worldwide.`,
+      correct: ["add to", "play a role in", "account for"],
+      distractors: ["reduce", "reverse"],
+      explanation: "add to、play a role in、account for 均可表示對某結果有所促進或貢獻，是 contribute 在學術因果語境中的替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "implement",
+      sentence: `The school board agreed to <span class="target-word">implement</span> new anti-bullying policies starting from the next academic year.`,
+      correct: ["carry out", "execute", "put into practice"],
+      distractors: ["ignore", "abandon"],
+      explanation: "carry out、execute、put into practice 均表示將計劃或政策付諸行動，是 implement 在管理與政策語境中的替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "anticipate",
+      sentence: `Economists <span class="target-word">anticipate</span> a period of slower growth as interest rates continue to rise globally.`,
+      correct: ["expect", "foresee", "project"],
+      distractors: ["dismiss", "deny"],
+      explanation: "expect、foresee、project 均表示根據現有趨勢預期未來發展，是 anticipate 在經濟與學術語境中的精準替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "transform",
+      sentence: `Digital technology has the power to <span class="target-word">transform</span> traditional industries beyond recognition within a decade.`,
+      correct: ["reshape", "revolutionise", "restructure"],
+      distractors: ["maintain", "preserve"],
+      explanation: "reshape、revolutionise、restructure 均表示使某事物發生根本性的改變，是 transform 在科技與社會語境中的替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "challenge",
+      sentence: `Some economists <span class="target-word">challenge</span> the assumption that economic growth always leads to improved quality of life.`,
+      correct: ["contest", "dispute", "question"],
+      distractors: ["accept", "confirm"],
+      explanation: "contest、dispute、question 均表示對某論點提出異議或表示懷疑，是 challenge 在學術辯論語境中的替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "seek",
+      sentence: `Many young graduates <span class="target-word">seek</span> better career opportunities in cities with stronger economies and job markets.`,
+      correct: ["pursue", "look for", "strive for"],
+      distractors: ["avoid", "reject"],
+      explanation: "pursue、look for、strive for 均表示積極尋找或努力追求某目標，是 seek 在社會與學術語境中的替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "demonstrate",
+      sentence: `Clinical trials <span class="target-word">demonstrate</span> that the new treatment is effective in reducing symptoms in over 80% of patients.`,
+      correct: ["prove", "illustrate", "verify"],
+      distractors: ["disprove", "conceal"],
+      explanation: "prove、illustrate、verify 均表示以事實或數據說明某事為真，是 demonstrate 在學術論證語境中的替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "consume",
+      sentence: `Developed nations <span class="target-word">consume</span> far more natural resources per capita than developing countries.`,
+      correct: ["use up", "deplete", "exhaust"],
+      distractors: ["conserve", "preserve"],
+      explanation: "use up、deplete、exhaust 均表示消耗或用盡某種資源，是 consume 在環境與經濟語境中的替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "sustain",
+      sentence: `It is increasingly difficult to <span class="target-word">sustain</span> high levels of economic growth without causing irreversible environmental damage.`,
+      correct: ["maintain", "keep up", "prolong"],
+      distractors: ["abandon", "terminate"],
+      explanation: "maintain、keep up、prolong 均表示長期保持某種狀態或水準，是 sustain 在發展語境中的精準替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "persuade",
+      sentence: `Advertisers use a range of psychological techniques to <span class="target-word">persuade</span> consumers to buy products they do not need.`,
+      correct: ["convince", "influence", "sway"],
+      distractors: ["deter", "discourage"],
+      explanation: "convince、influence、sway 均表示說服或影響他人改變想法或行為，是 persuade 在傳播與心理語境中的替換詞。（出處：538考點詞 #300）"
+    },
+    {
+      level: "intermediate",
+      word: "specify",
+      sentence: `The contract does not <span class="target-word">specify</span> how disputes between the two parties should be resolved.`,
+      correct: ["define", "detail", "clarify"],
+      distractors: ["obscure", "confuse"],
+      explanation: "define、detail、clarify 均表示明確說明或指出某事物的細節，是 specify 在法律與學術語境中的替換詞。"
+    },
+    {
+      level: "intermediate",
+      word: "determine",
+      sentence: `A combination of genetic and environmental factors can <span class="target-word">determine</span> an individual's risk of developing chronic illness.`,
+      correct: ["decide", "shape", "conclude"],
+      distractors: ["ignore", "distort"],
+      explanation: "decide、shape、conclude 均表示對某結果起決定性作用，是 determine 在科學與社會語境中的替換詞。（出處：538考點詞 #48）"
+    },
+    {
+      level: "intermediate",
+      word: "restrict",
+      sentence: `The new regulations will <span class="target-word">restrict</span> the amount of advertising that can target children under the age of twelve.`,
+      correct: ["limit", "curb", "constrain"],
+      distractors: ["expand", "encourage"],
+      explanation: "limit、curb、constrain 均表示對某行為或數量設置上限或限制，是 restrict 在法規語境中的替換詞。（出處：538考點詞 #34, 170）"
+    },
+    {
+      level: "intermediate",
+      word: "overcome",
+      sentence: `With adequate support, most students can <span class="target-word">overcome</span> the initial difficulties of learning in a second language.`,
+      correct: ["conquer", "surmount", "tackle"],
+      distractors: ["succumb to", "surrender to"],
+      explanation: "conquer、surmount、tackle 均表示成功應對並克服困難，是 overcome 在教育與心理語境中的替換詞。（出處：538考點詞 #292）"
+    },
+
+    /* ── ADVANCED · Round 3 ── */
+    {
+      level: "advanced",
+      word: "ambiguous",
+      sentence: `The policy statement was deliberately <span class="target-word">ambiguous</span>, allowing different departments to interpret it in their own favour.`,
+      correct: ["vague", "unclear", "equivocal"],
+      distractors: ["precise", "explicit"],
+      explanation: "vague、unclear、equivocal 均表示含義不明確或可有多種解讀，是 ambiguous 在學術與法律語境中的替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "subsequent",
+      sentence: `The initial experiment was promising, and <span class="target-word">subsequent</span> trials confirmed that the results were fully reproducible.`,
+      correct: ["following", "later", "ensuing"],
+      distractors: ["prior", "preceding"],
+      explanation: "following、later、ensuing 均表示在某事件之後發生的，是 subsequent 在學術研究時序語境中的精準替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "inherent",
+      sentence: `There is an <span class="target-word">inherent</span> tension between individual freedom and collective responsibility in any democratic society.`,
+      correct: ["intrinsic", "fundamental", "built-in"],
+      distractors: ["external", "acquired"],
+      explanation: "intrinsic、fundamental、built-in 均表示某特質是本質固有的，而非後天習得，是 inherent 在哲學與社會語境中的替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "facilitate",
+      sentence: `The new digital platform will <span class="target-word">facilitate</span> collaboration between researchers working at institutions across the globe.`,
+      correct: ["enable", "aid", "expedite"],
+      distractors: ["hinder", "obstruct"],
+      explanation: "enable、aid、expedite 均表示使某過程更容易或更快速，是 facilitate 在科技與教育語境中的替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "scrutinise",
+      sentence: `The committee will carefully <span class="target-word">scrutinise</span> all submitted proposals before awarding the research grant.`,
+      correct: ["examine", "inspect", "probe"],
+      distractors: ["ignore", "dismiss"],
+      explanation: "examine、inspect、probe 均表示仔細審視或深入評估，是 scrutinise 在學術評審語境中的替換詞。（出處：538考點詞邏輯）"
+    },
+    {
+      level: "advanced",
+      word: "coherent",
+      sentence: `A well-structured academic essay requires a <span class="target-word">coherent</span> argument that progresses logically from introduction to conclusion.`,
+      correct: ["logical", "consistent", "structured"],
+      distractors: ["contradictory", "disjointed"],
+      explanation: "logical、consistent、structured 均表示有條理或前後一致的，是 coherent 在學術寫作語境中的精準替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "volatile",
+      sentence: `Investors are advised to exercise caution in a <span class="target-word">volatile</span> market where prices can shift dramatically within hours.`,
+      correct: ["unstable", "unpredictable", "fluctuating"],
+      distractors: ["stable", "consistent"],
+      explanation: "unstable、unpredictable、fluctuating 均表示容易突然發生劇烈變化，是 volatile 在金融與政治語境中的替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "explicit",
+      sentence: `The guidelines provide an <span class="target-word">explicit</span> framework for how schools should respond to safeguarding concerns.`,
+      correct: ["clear", "specific", "detailed"],
+      distractors: ["vague", "ambiguous"],
+      explanation: "clear、specific、detailed 均表示表達清晰無誤且毫不含糊，是 explicit 在學術語境中的替換詞。（出處：538考點詞 #212）"
+    },
+    {
+      level: "advanced",
+      word: "compensate",
+      sentence: `The company was ordered to <span class="target-word">compensate</span> employees for the loss of income incurred during the factory closure.`,
+      correct: ["offset", "make up for", "reimburse"],
+      distractors: ["withhold", "confiscate"],
+      explanation: "offset、make up for、reimburse 均表示以其他方式彌補損失或不足，是 compensate 在經濟與法律語境中的替換詞。（出處：538考點詞 #28）"
+    },
+    {
+      level: "advanced",
+      word: "supersede",
+      sentence: `Digital streaming services have effectively <span class="target-word">superseded</span> physical media as the primary means of consuming entertainment.`,
+      correct: ["replaced", "displaced", "supplanted"],
+      distractors: ["reinforced", "supplemented"],
+      explanation: "replaced、displaced、supplanted 均表示取代原有事物並使其失去主導地位，是 supersede 在科技語境中的精準替換詞。（出處：538考點詞 #352）"
+    },
+    {
+      level: "advanced",
+      word: "legitimate",
+      sentence: `The opposition questioned whether the election results were entirely <span class="target-word">legitimate</span> given the reported irregularities.`,
+      correct: ["valid", "lawful", "genuine"],
+      distractors: ["fraudulent", "questionable"],
+      explanation: "valid、lawful、genuine 均表示符合規範或具有法律效力，是 legitimate 在政治與法律語境中的替換詞。（出處：538考點詞 #44）"
+    },
+    {
+      level: "advanced",
+      word: "equivalent",
+      sentence: `Online degrees are increasingly viewed as <span class="target-word">equivalent</span> to traditional campus-based qualifications by many employers.`,
+      correct: ["equal", "comparable", "corresponding"],
+      distractors: ["inferior", "unrelated"],
+      explanation: "equal、comparable、corresponding 均表示在價值或水準上相同或相當，是 equivalent 在學術認證語境中的替換詞。（出處：538考點詞 #119）"
+    },
+    {
+      level: "advanced",
+      word: "tentative",
+      sentence: `The researchers presented a <span class="target-word">tentative</span> conclusion, noting that further data was needed before firmer judgements could be made.`,
+      correct: ["provisional", "preliminary", "uncertain"],
+      distractors: ["definitive", "conclusive"],
+      explanation: "provisional、preliminary、uncertain 均表示尚未確定或仍待進一步驗證，是 tentative 在學術語境中的替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "pivotal",
+      sentence: `The discovery of penicillin is widely regarded as a <span class="target-word">pivotal</span> moment in the entire history of modern medicine.`,
+      correct: ["crucial", "decisive", "critical"],
+      distractors: ["trivial", "minor"],
+      explanation: "crucial、decisive、critical 均表示對結果具有決定性的重要影響，是 pivotal 在歷史與學術語境中的替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "substantial",
+      sentence: `The project required a <span class="target-word">substantial</span> investment of both time and resources before any measurable results began to appear.`,
+      correct: ["considerable", "significant", "sizeable"],
+      distractors: ["negligible", "minimal"],
+      explanation: "considerable、significant、sizeable 均表示在規模或程度上相當可觀，是 substantial 在學術與商業語境中的精準替換詞。（出處：538考點詞 #160）"
+    },
+    {
+      level: "advanced",
+      word: "prevalent",
+      sentence: `Obesity has become increasingly <span class="target-word">prevalent</span> in developed nations over the course of the past three decades.`,
+      correct: ["widespread", "common", "rampant"],
+      distractors: ["rare", "diminishing"],
+      explanation: "widespread、common、rampant 均表示某事物廣泛存在或普遍發生，是 prevalent 在公共衛生與學術語境中的替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "coincide",
+      sentence: `The rise in e-commerce sales appears to <span class="target-word">coincide</span> with a significant decline in traditional high-street retail.`,
+      correct: ["align", "correspond", "overlap"],
+      distractors: ["contradict", "conflict"],
+      explanation: "align、correspond、overlap 均表示兩件事在時間或趨勢上同時發生或相互吻合，是 coincide 在資料分析語境中的替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "alleviate",
+      sentence: `New pain management techniques have significantly helped to <span class="target-word">alleviate</span> discomfort for patients suffering from chronic conditions.`,
+      correct: ["ease", "relieve", "lessen"],
+      distractors: ["worsen", "aggravate"],
+      explanation: "ease、relieve、lessen 均表示使不舒適或困難的情況減輕，是 alleviate 在醫療與人文語境中的精準替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "perpetuate",
+      sentence: `Stereotypical media representations can <span class="target-word">perpetuate</span> harmful social biases and reinforce inequality across generations.`,
+      correct: ["sustain", "prolong", "reinforce"],
+      distractors: ["challenge", "dismantle"],
+      explanation: "sustain、prolong、reinforce 均表示使某狀況或態度持續下去，是 perpetuate 在社會科學語境中的替換詞。"
+    },
+    {
+      level: "advanced",
+      word: "transcend",
+      sentence: `The appeal of great literature can <span class="target-word">transcend</span> cultural and linguistic boundaries to speak to universal human experience.`,
+      correct: ["surpass", "exceed", "go beyond"],
+      distractors: ["conform to", "respect"],
+      explanation: "surpass、exceed、go beyond 均表示超越某限制或範疇，是 transcend 在文學與哲學語境中的精準替換詞。（出處：538考點詞 #363）"
+    }
+  ];
+
+  const TIERS = [
+    { min: 10, label: "Expert",    desc: "完美！傑出的學術詞彙掌握力，具備 IELTS Band 9 寫作水準。" },
+    { min: 8,  label: "Very Good", desc: "詞彙精準度極高，達到 Band 8 強勢寫手的水準。" },
+    { min: 6,  label: "Good",      desc: "學術語域運用扎實，考官一定對你的詞彙留下深刻印象。" },
+    { min: 4,  label: "Competent", desc: "整體表現良好，但正式詞彙的精準度仍有進步空間。" },
+    { min: 2,  label: "Modest",    desc: "對學術詞彙有基本認識，繼續累積單字量。" },
+    { min: 0,  label: "Limited",   desc: "學術同義詞需要更多練習。仔細看解析，再試一次！" }
+  ];
+
+  /* ═══════════════════════════════════════════════
+     STATE
+  ═══════════════════════════════════════════════ */
+  let queue        = [];
+  let current      = null;
+  let questionIdx  = 0;
+  let correctCount = 0;
+  let selected     = new Set();
+  let confirmed    = false;
+  let history      = [];   // { q, playerAnswers, isCorrect }
+  let currentLevel = "";
+
+  let timerInterval = null;
+  let timeLeft      = 10;
+  let autoNextTimer = null;
+  let audioCtx      = null;
+
+  function getAudioCtx() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  // Unlock audio on first real user tap (required by iOS Safari)
+  document.addEventListener('touchstart', () => {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }, { once: true });
+  const CIRCUMFERENCE = 99.9;
+
+  function getTimerTotal() {
+    if (currentLevel === 'beginner')     return 20;
+    if (currentLevel === 'intermediate') return 15;
+    return 10; // advanced / review
+  }
+
+  /* ═══════════════════════════════════════════════
+     DOM
+  ═══════════════════════════════════════════════ */
+  const gameHeader     = document.getElementById('game-header');
+  const screenDiff     = document.getElementById('screen-difficulty');
+  const screenGame     = document.getElementById('screen-game');
+  const screenEnd      = document.getElementById('screen-end');
+
+  const progressBar    = document.getElementById('progress-bar');
+  const qCounter       = document.getElementById('q-counter');
+  const scoreVal       = document.getElementById('score-val');
+  const timerArc       = document.getElementById('timer-arc');
+  const timerNum       = document.getElementById('timer-num');
+
+  const sentenceBlock  = document.getElementById('sentence-block');
+  const baseWordEl     = document.getElementById('base-word');
+  const optionsGrid    = document.getElementById('options-grid');
+  const feedback       = document.getElementById('feedback');
+  const confirmBtn     = document.getElementById('confirm-btn');
+  const nextBtn        = document.getElementById('next-btn');
+
+  /* ═══════════════════════════════════════════════
+     UTILS
+  ═══════════════════════════════════════════════ */
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function setScreen(name) {
+    [screenDiff, screenGame, screenEnd].forEach(s => s.classList.remove('active'));
+    if (name === 'difficulty') {
+      screenDiff.classList.add('active');
+      gameHeader.style.display = 'none';
+      renderWrongCard();
+    } else if (name === 'game') {
+      screenGame.classList.add('active');
+      gameHeader.style.display = '';
+    } else {
+      screenEnd.classList.add('active');
+      gameHeader.style.display = 'none';
+    }
+  }
+
+  function updateHeader() {
+    const total = queue.length || 10;
+    qCounter.textContent    = `第 ${questionIdx + 1} 題 / 共 ${total} 題`;
+    scoreVal.textContent    = correctCount;
+    progressBar.style.width = (questionIdx / total * 100) + '%';
+  }
+
+  /* ═══════════════════════════════════════════════
+     TIMER
+  ═══════════════════════════════════════════════ */
+  function updateTimerUI(t) {
+    const total  = getTimerTotal();
+    const offset = CIRCUMFERENCE * (1 - t / total);
+    timerArc.style.strokeDashoffset = offset;
+    timerNum.textContent = t;
+    timerArc.classList.remove('warn', 'alert');
+    if (t <= 3)      timerArc.classList.add('alert');
+    else if (t <= 5) timerArc.classList.add('warn');
+  }
+
+  function startTimer() {
+    clearInterval(timerInterval);
+    timeLeft = getTimerTotal();
+    updateTimerUI(timeLeft);
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      updateTimerUI(timeLeft);
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        autoConfirm();
+      }
+    }, 1000);
+  }
+
+  function stopTimer() {
+    clearInterval(timerInterval);
+  }
+
+  function autoConfirm() {
+    if (confirmed) return;
+    confirmBtn.click();
+  }
+
+  /* ═══════════════════════════════════════════════
+     SOUND (Web Audio API — Piano Arpeggios)
+  ═══════════════════════════════════════════════ */
+  function playSound(type) {
+    try {
+      const ctx = getAudioCtx();
+      if (type === 'correct') {
+        // C5 → E5 → G5 上行琶音
+        [523, 659, 784].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.connect(g); g.connect(ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          const t = ctx.currentTime + i * 0.09;
+          g.gain.setValueAtTime(0.28, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+          osc.start(t); osc.stop(t + 0.35);
+        });
+      } else {
+        // A4 → F4 下行兩音，柔和提示
+        [440, 349].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          const g   = ctx.createGain();
+          osc.connect(g); g.connect(ctx.destination);
+          osc.type = 'sine';
+          osc.frequency.value = freq;
+          const t = ctx.currentTime + i * 0.12;
+          g.gain.setValueAtTime(0.22, t);
+          g.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+          osc.start(t); osc.stop(t + 0.3);
+        });
+      }
+    } catch (_) {}
+  }
+
+  /* ═══════════════════════════════════════════════
+     LOCALSTORAGE — WRONG HISTORY
+  ═══════════════════════════════════════════════ */
+  const HISTORY_KEY = 'ielts_wrong_history';
+
+  function getWrongList() {
+    try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
+    catch (_) { return []; }
+  }
+
+  function saveWrongQuestion(q) {
+    const list = getWrongList();
+    if (!list.some(x => x.word === q.word && x.level === q.level)) {
+      list.push({ word: q.word, level: q.level });
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+    }
+  }
+
+  function removeCorrectQuestion(q) {
+    const list = getWrongList().filter(x => !(x.word === q.word && x.level === q.level));
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list));
+  }
+
+  function clearHistory() {
+    localStorage.removeItem(HISTORY_KEY);
+    renderWrongCard();
+  }
+
+  function renderWrongCard() {
+    const list = getWrongList();
+    const wrap = document.getElementById('wrong-card-wrap');
+    if (list.length === 0) { wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    document.getElementById('wrong-card-count').textContent = `${list.length} 題待複習`;
+  }
+
+  /* ═══════════════════════════════════════════════
+     DIFFICULTY SELECTION
+  ═══════════════════════════════════════════════ */
+  document.querySelectorAll('.diff-card').forEach(card => {
+    card.addEventListener('click', () => startGame(card.dataset.level));
+  });
+
+  document.getElementById('wrong-card').addEventListener('click', () => startGame('review'));
+
+  /* ═══════════════════════════════════════════════
+     GAME START
+  ═══════════════════════════════════════════════ */
+  function startGame(level) {
+    let pool;
+    if (level === 'review') {
+      const wrongs = getWrongList();
+      pool = DB.filter(q => wrongs.some(w => w.word === q.word && w.level === q.level));
+      if (pool.length === 0) { renderWrongCard(); return; }
+    } else {
+      pool = DB.filter(q => q.level === level);
+    }
+    queue        = shuffle(pool).slice(0, 10);
+    correctCount = 0;
+    questionIdx  = 0;
+    history      = [];
+    currentLevel = level;
+
+    setScreen('game');
+    loadQuestion();
+  }
+
+  /* ═══════════════════════════════════════════════
+     LOAD QUESTION
+  ═══════════════════════════════════════════════ */
+  function scheduleNextQuestion() {
+    let count = 3;
+    nextBtn.textContent = `下一題（${count}）`;
+    nextBtn.classList.add('visible');
+    autoNextTimer = setInterval(() => {
+      count--;
+      nextBtn.textContent = count > 0 ? `下一題（${count}）` : '下一題';
+      if (count <= 0) {
+        clearInterval(autoNextTimer);
+        questionIdx++;
+        loadQuestion();
+      }
+    }, 1000);
+  }
+
+  function loadQuestion() {
+    clearInterval(autoNextTimer);
+    if (questionIdx >= queue.length) { showEndScreen(); return; }
+
+    current   = queue[questionIdx];
+    selected  = new Set();
+    confirmed = false;
+
+    updateHeader();
+
+    // Sentence
+    sentenceBlock.innerHTML = `"${current.sentence}"`;
+    sentenceBlock.classList.remove('fade-up');
+    void sentenceBlock.offsetWidth;
+    sentenceBlock.classList.add('fade-up');
+
+    // Base word
+    baseWordEl.textContent = current.word;
+    baseWordEl.parentElement.classList.remove('fade-up');
+    void baseWordEl.parentElement.offsetWidth;
+    baseWordEl.parentElement.classList.add('fade-up');
+
+    // Options
+    const allOptions = shuffle([...current.correct, ...current.distractors]);
+    optionsGrid.innerHTML = '';
+    allOptions.forEach(word => {
+      const btn = document.createElement('button');
+      btn.className = 'opt-btn';
+      btn.textContent = word;
+      btn.addEventListener('click', () => toggleOption(btn, word));
+      optionsGrid.appendChild(btn);
+    });
+
+    // Reset controls
+    feedback.textContent = '';
+    feedback.className   = '';
+    confirmBtn.disabled  = true;
+    confirmBtn.style.display = '';
+    nextBtn.textContent = '下一題';
+    nextBtn.classList.remove('visible');
+
+    startTimer();
+  }
+
+  /* ═══════════════════════════════════════════════
+     TOGGLE OPTION
+  ═══════════════════════════════════════════════ */
+  function toggleOption(btn, word) {
+    if (confirmed) return;
+    if (selected.has(word)) {
+      selected.delete(word);
+      btn.classList.remove('selected');
+    } else {
+      selected.add(word);
+      btn.classList.add('selected');
+    }
+    confirmBtn.disabled = selected.size === 0;
+  }
+
+  /* ═══════════════════════════════════════════════
+     CONFIRM
+  ═══════════════════════════════════════════════ */
+  confirmBtn.addEventListener('click', () => {
+    if (confirmed) return;
+    confirmed = true;
+    stopTimer();
+    confirmBtn.style.display = 'none';
+
+    const correctSet = new Set(current.correct);
+    const isCorrect  =
+      selected.size === correctSet.size &&
+      [...selected].every(w => correctSet.has(w));
+
+    // Reveal buttons
+    optionsGrid.querySelectorAll('.opt-btn').forEach(btn => {
+      btn.disabled = true;
+      const w = btn.textContent;
+      const isCorrectWord = correctSet.has(w);
+      const isSelected    = selected.has(w);
+      if (isCorrectWord && isSelected)       btn.classList.add('reveal-correct');
+      else if (!isCorrectWord && isSelected) btn.classList.add('reveal-wrong');
+      else if (isCorrectWord && !isSelected) btn.classList.add('reveal-missed');
+      btn.classList.remove('selected');
+    });
+
+    if (isCorrect) {
+      correctCount++;
+      scoreVal.textContent = correctCount;
+      feedback.textContent = `+1 分 — 完全正確！`;
+      feedback.className   = 'visible';
+      playSound('correct');
+      removeCorrectQuestion(current);
+    } else {
+      const reason = selected.size === 0 ? '時間到 — ' : '';
+      feedback.textContent = `${reason}未完全正確 — 橘色為漏選，紅色為誤選`;
+      feedback.className   = 'visible';
+      screenGame.classList.add('shake');
+      screenGame.addEventListener('animationend', () => screenGame.classList.remove('shake'), { once: true });
+      playSound('wrong');
+      saveWrongQuestion(current);
+    }
+
+    history.push({ q: current, playerAnswers: [...selected], isCorrect });
+
+    progressBar.style.width = ((questionIdx + 1) / queue.length * 100) + '%';
+    scheduleNextQuestion();
+  });
+
+  /* ═══════════════════════════════════════════════
+     NEXT
+  ═══════════════════════════════════════════════ */
+  nextBtn.addEventListener('click', () => {
+    clearInterval(autoNextTimer);
+    questionIdx++;
+    loadQuestion();
+  });
+
+  // Initial render of wrong card on page load
+  renderWrongCard();
+
+  /* ═══════════════════════════════════════════════
+     END SCREEN
+  ═══════════════════════════════════════════════ */
+  function showEndScreen() {
+    progressBar.style.width = '100%';
+    setScreen('end');
+
+    const tier = TIERS.find(t => correctCount >= t.min);
+    document.getElementById('score-band').textContent = correctCount;
+    document.getElementById('score-tier').textContent = tier.label;
+    document.getElementById('score-desc').textContent = tier.desc;
+
+    // Review cards
+    const list = document.getElementById('review-list');
+    list.innerHTML = '';
+
+    history.forEach((entry, i) => {
+      const { q, playerAnswers, isCorrect } = entry;
+      const card = document.createElement('div');
+      card.className = `review-card ${isCorrect ? 'correct' : 'wrong'}`;
+
+      const playerSet  = new Set(playerAnswers);
+      const correctSet = new Set(q.correct);
+
+      const missedWords = q.correct.filter(w => !playerSet.has(w));
+      const wrongWords  = playerAnswers.filter(w => !correctSet.has(w));
+
+      card.innerHTML = `
+        <div class="review-card-header">
+          <span class="review-q-label">Q${i + 1}</span>
+          <span class="review-result-badge">${isCorrect ? '✓ 答對' : '✗ 未完全正確'}</span>
+        </div>
+        <div class="review-sentence">"${q.sentence}"</div>
+        <div class="review-answers">
+          <div class="review-answer-row">
+            <span class="review-answer-label">正確答案：</span>
+            <span class="review-answer-words">${q.correct.join(' · ')}</span>
+          </div>
+          <div class="review-answer-row">
+            <span class="review-answer-label">你的答案：</span>
+            <span class="review-answer-words ${!isCorrect ? 'miss' : ''}">${playerAnswers.length ? playerAnswers.join(' · ') : '（未選）'}</span>
+          </div>
+          ${missedWords.length ? `<div class="review-answer-row"><span class="review-answer-label" style="color:var(--orange)">漏選：</span><span class="review-answer-words" style="color:var(--orange)">${missedWords.join(' · ')}</span></div>` : ''}
+          ${wrongWords.length  ? `<div class="review-answer-row"><span class="review-answer-label" style="color:var(--red)">誤選：</span><span class="review-answer-words" style="color:var(--red)">${wrongWords.join(' · ')}</span></div>` : ''}
+        </div>
+        <div class="review-explanation">${q.explanation}</div>
+      `;
+      list.appendChild(card);
+    });
+
+    screenEnd.scrollTop = 0;
+  }
+
+  /* ═══════════════════════════════════════════════
+     RESTART
+  ═══════════════════════════════════════════════ */
+  document.getElementById('restart-btn').addEventListener('click', () => {
+    setScreen('difficulty');
+  });
+
+  // Register Service Worker for PWA offline support
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+  }
+
+  </script>
+</body>
+</html>

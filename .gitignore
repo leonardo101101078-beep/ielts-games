@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Cursor IDE
+.cursor/
+
+# Other projects with their own repos
+my-ielts/
+snake-game/
+synonym-game/
+photography-portfolio/
+
+# Generated intermediate file (word bank is embedded in the HTML)
+wordbank_generated.js

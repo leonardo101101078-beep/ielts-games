@@ -1,0 +1,19 @@
+{
+  "name": "打打打打字啊啊啊",
+  "short_name": "打字啊",
+  "description": "IELTS 單字打字速度練習",
+  "start_url": "./ielts-typing-game.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF8F3",
+  "theme_color": "#C9A84C",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "icon-typing.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

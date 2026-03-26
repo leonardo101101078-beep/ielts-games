@@ -1,0 +1,19 @@
+{
+  "name": "同義詞消消消",
+  "short_name": "同義詞消消消",
+  "description": "IELTS 雅思同義詞挑戰遊戲",
+  "start_url": "./ielts-synonym-game.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FAF8F3",
+  "theme_color": "#C9A84C",
+  "lang": "zh-TW",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

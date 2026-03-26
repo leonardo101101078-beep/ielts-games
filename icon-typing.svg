@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Maskable-safe background -->
+  <circle cx="256" cy="256" r="256" fill="#C9A84C"/>
+  <!-- Scharacter centered -->
+  <text x="256" y="338" font-family="-apple-system, 'PingFang TC', 'Noto Sans TC', sans-serif"
+        font-size="270" font-weight="700" text-anchor="middle" fill="#FAF8F3">S</text>
+</svg>
