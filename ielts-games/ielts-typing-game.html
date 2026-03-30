@@ -652,7 +652,7 @@
     <div id="essay-card">
       <div id="essay-zh-label">中文含義</div>
       <div id="essay-function">引出爭議話題</div>
-      <div id="essay-en-hint">請輸入以下英文句型（含底線 ___ ）</div>
+      <div id="essay-en-hint">請輸入以下英文句型（與上方預覽一致）</div>
       <div id="essay-target"></div>
     </div>
 
@@ -665,7 +665,7 @@
         id="essay-input"
         type="text"
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-        placeholder="照著上方句型逐字輸入（含底線 ___ ）…"
+        placeholder="照著上方句型逐字輸入…"
       />
       <div id="essay-char-count">0 / 0</div>
     </div>
@@ -3752,6 +3752,20 @@
     speakOnline(word);
   }
 
+  function speakEssay(text) {
+    if (currentAudio) {
+      currentAudio.pause();
+      currentAudio.currentTime = 0;
+      currentAudio = null;
+    }
+    if (!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.lang  = 'en-US'; utt.rate = 0.88; utt.pitch = 1.0;
+    if (bestVoice) utt.voice = bestVoice;
+    speechSynthesis.speak(utt);
+  }
+
   /* ══════════════════════════════════════════════
      STATE
   ══════════════════════════════════════════════ */
@@ -3765,7 +3779,30 @@
   let fallTimer  = null;
   let locked     = false;
 
-  const SPEED_TOTAL = 15;
+  const SPEED_TOTAL   = 15;
+  const SPEED_WARMUP  = 5;
+
+  const REVIEW_ITEMS = [
+    { prompt: '一月',   answer: 'January',   category: '月份' },
+    { prompt: '二月',   answer: 'February',  category: '月份' },
+    { prompt: '三月',   answer: 'March',     category: '月份' },
+    { prompt: '四月',   answer: 'April',     category: '月份' },
+    { prompt: '五月',   answer: 'May',       category: '月份' },
+    { prompt: '六月',   answer: 'June',      category: '月份' },
+    { prompt: '七月',   answer: 'July',      category: '月份' },
+    { prompt: '八月',   answer: 'August',    category: '月份' },
+    { prompt: '九月',   answer: 'September', category: '月份' },
+    { prompt: '十月',   answer: 'October',   category: '月份' },
+    { prompt: '十一月', answer: 'November',  category: '月份' },
+    { prompt: '十二月', answer: 'December',  category: '月份' },
+    { prompt: '星期一', answer: 'Monday',    category: '星期' },
+    { prompt: '星期二', answer: 'Tuesday',   category: '星期' },
+    { prompt: '星期三', answer: 'Wednesday', category: '星期' },
+    { prompt: '星期四', answer: 'Thursday',  category: '星期' },
+    { prompt: '星期五', answer: 'Friday',    category: '星期' },
+    { prompt: '星期六', answer: 'Saturday',  category: '星期' },
+    { prompt: '星期日', answer: 'Sunday',    category: '星期' },
+  ];
 
   const $ = id => document.getElementById(id);
 
@@ -3952,7 +3989,16 @@
     score      = 0;
     missed     = [];
     qIndex     = 0;
-    queue = shuffle(WORDS).slice(0, SPEED_TOTAL);
+    const reviewWarmup = shuffle(REVIEW_ITEMS).slice(0, SPEED_WARMUP).map(r => ({
+      word:  r.answer,
+      zh:    r.prompt,
+      hint:  r.category,
+      audio: null,
+    }));
+    queue = [
+      ...reviewWarmup,
+      ...shuffle(WORDS).slice(0, SPEED_TOTAL - SPEED_WARMUP),
+    ];
 
     const badge = name + ' · ' + sec + 's';
     $('diff-badge').textContent = badge;
@@ -3991,6 +4037,14 @@
   /* ══════════════════════════════════════════════════════
      ESSAY MODE — 作文句型練習
   ══════════════════════════════════════════════════════ */
+
+  function normalizeEssayTarget(raw) {
+    return raw
+      .replace(/___/g, 'something')
+      .replace(/\s+/g, ' ')
+      .replace(/\s+\./g, '.')
+      .trim();
+  }
 
   const ESSAY_PHRASES = [
     { fn: '引出爭議話題',   cat: 'C1 引言句',   target: 'The question of whether ___ has sparked heated debate in recent years.' },
@@ -4037,7 +4091,7 @@
     { fn: '描述顯著下降',   cat: 'C7 圖表作文', target: 'Conversely, ___ experienced a sharp decline, falling from ___ to ___ .' },
     { fn: '描述穩定趨勢',   cat: 'C7 圖表作文', target: '___ remained relatively stable throughout the period, hovering around ___ .' },
     { fn: '比較兩項數據',   cat: 'C7 圖表作文', target: 'While ___ showed an upward trend, ___ followed the opposite pattern.' },
-  ];
+  ].map(p => ({ ...p, target: normalizeEssayTarget(p.target) }));
 
   const ESSAY_PER_ROUND = 10;
   let essayQueue  = [];
@@ -4077,6 +4131,7 @@
     $('essay-progress-fill').style.width = '0%';
     renderEssayTarget('');
     inp.focus();
+    requestAnimationFrame(() => speakEssay(ph.target));
   }
 
   function renderEssayTarget(typed) {
