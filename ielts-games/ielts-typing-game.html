@@ -426,6 +426,7 @@
       color: var(--ink-faint); font-weight: 600; margin-bottom: 12px;
     }
     .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .mode-grid-single { grid-template-columns: 1fr; max-width: 100%; }
     .mode-btn {
       background: var(--card-bg); border-radius: var(--radius); padding: 18px 12px;
       display: flex; flex-direction: column; align-items: center; gap: 6px;
@@ -441,57 +442,6 @@
     .mode-btn .mode-name { font-size: 0.88rem; font-weight: 700; color: var(--ink); }
     .mode-btn .mode-sub { font-size: 0.7rem; color: var(--ink-faint); letter-spacing: 0.06em; }
 
-    /* ══════════════════════════════
-       REVIEW SCREEN (月份 + 星期)
-    ══════════════════════════════ */
-    #review-screen { gap: 24px; width: 100%; }
-    #review-topbar {
-      width: 100%; display: flex; justify-content: space-between;
-      align-items: center; padding: 0 4px;
-    }
-    #review-counter {
-      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em;
-      text-transform: uppercase; color: var(--ink-soft);
-    }
-    #review-badge {
-      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
-      padding: 3px 10px; border-radius: 20px;
-      background: var(--gold-pale); color: var(--gold);
-    }
-    #review-card {
-      width: 100%; background: var(--card-bg); border-radius: var(--radius);
-      padding: 44px 24px; text-align: center;
-      box-shadow: 0 2px 12px rgba(0,0,0,.06), 0 0 0 1.5px #E8E4DA;
-      display: flex; flex-direction: column; align-items: center; gap: 10px;
-      transition: background .25s;
-    }
-    #review-card.correct-flash { background: var(--green-pale); }
-    #review-card.wrong-flash   { background: var(--red-pale); }
-    #review-category {
-      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em;
-      color: var(--ink-faint); font-weight: 600;
-    }
-    #review-prompt {
-      font-size: 3rem; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; line-height: 1.1;
-    }
-    #review-answer-reveal { font-size: 1.1rem; color: var(--green); font-weight: 600; min-height: 1.5em; }
-    #review-input-area { width: 100%; display: flex; flex-direction: column; gap: 8px; }
-    #review-input {
-      width: 100%; background: var(--card-bg); border: 2px solid #E8E4DA;
-      border-radius: var(--radius); padding: 14px 18px; font-size: 1.15rem;
-      font-family: inherit; color: var(--ink); text-align: center;
-      outline: none; transition: border-color .2s;
-    }
-    #review-input:focus  { border-color: var(--gold); }
-    #review-input.correct { border-color: var(--green); background: var(--green-pale); }
-    #review-input.wrong   { border-color: var(--red);   background: var(--red-pale);
-      animation: input-shake .3s ease; }
-    #review-hint { font-size: 0.75rem; color: var(--ink-faint); text-align: center; letter-spacing: 0.06em; }
-    #review-skip-btn {
-      background: none; color: var(--ink-faint); font-size: 0.8rem;
-      padding: 6px 12px; border-radius: 8px; text-decoration: underline; align-self: center;
-    }
-    #review-skip-btn:hover { color: var(--ink-soft); }
 
     /* ══════════════════════════════
        ESSAY SCREEN
@@ -516,9 +466,17 @@
       box-shadow: 0 2px 12px rgba(0,0,0,.06), 0 0 0 1.5px #E8E4DA;
       display: flex; flex-direction: column; gap: 12px;
     }
+    #essay-zh-label {
+      font-size: 0.7rem; letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--ink-faint); font-weight: 700; margin-bottom: 4px;
+    }
     #essay-function {
-      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em;
-      color: var(--ink-faint); font-weight: 600;
+      font-size: 1.12rem; font-weight: 600; color: var(--ink-soft);
+      line-height: 1.45; margin-bottom: 14px;
+    }
+    #essay-en-hint {
+      font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-faint); font-weight: 600; margin-bottom: 6px;
     }
     #essay-target {
       font-size: 1.05rem; line-height: 1.75;
@@ -589,7 +547,7 @@
       <div class="brand-label">IELTS Practice</div>
       <div class="brand-title">Typing <span>Speed</span></div>
       <div class="brand-desc">
-        單字從天空落下，在觸地前正確打完即得分。<br>每局 10 題，選擇你的挑戰難度：
+        單字從天空落下，在觸地前正確打完即得分。<br>每局 15 題，選擇你的挑戰難度：
       </div>
     </div>
 
@@ -616,16 +574,11 @@
 
     <div class="mode-section">
       <div class="mode-section-title">更多練習模式</div>
-      <div class="mode-grid">
-        <button class="mode-btn" id="review-mode-btn">
-          <span class="mode-icon">📅</span>
-          <span class="mode-name">月份 &amp; 星期</span>
-          <span class="mode-sub">無計時複習</span>
-        </button>
+      <div class="mode-grid mode-grid-single">
         <button class="mode-btn" id="essay-mode-btn">
           <span class="mode-icon">✍️</span>
           <span class="mode-name">作文句型</span>
-          <span class="mode-sub">句型打字練習</span>
+          <span class="mode-sub">隨機 10 題 · 無計時</span>
         </button>
       </div>
     </div>
@@ -634,7 +587,7 @@
   <!-- ══ GAME SCREEN ══ -->
   <section id="game-screen" class="screen">
     <div id="game-topbar">
-      <span id="q-counter">1 / 10</span>
+      <span id="q-counter">1 / 15</span>
       <span id="diff-badge">Easy · 10s</span>
     </div>
 
@@ -671,7 +624,7 @@
   <section id="result-screen" class="screen">
     <div class="result-header">
       <div class="result-grade" id="result-grade">得分</div>
-      <div class="result-score"><span id="result-num">0</span><span id="result-total"> / 10</span></div>
+      <div class="result-score"><span id="result-num">0</span><span id="result-total"> / 15</span></div>
       <div class="result-label" id="result-label">繼續加油！</div>
     </div>
 
@@ -688,41 +641,18 @@
     </div>
   </section>
 
-  <!-- ══ REVIEW SCREEN (月份 + 星期) ══ -->
-  <section id="review-screen" class="screen">
-    <div id="review-topbar">
-      <span id="review-counter">1 / 19</span>
-      <span id="review-badge">月份 &amp; 星期</span>
-    </div>
-
-    <div id="review-card">
-      <div id="review-category">月份</div>
-      <div id="review-prompt">一月</div>
-      <div id="review-answer-reveal"></div>
-    </div>
-
-    <div id="review-input-area">
-      <input
-        id="review-input"
-        type="text"
-        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-        placeholder="輸入英文…"
-      />
-      <div id="review-hint">完整輸入後自動判定，不需按 Enter</div>
-    </div>
-
-    <button id="review-skip-btn">跳過此題</button>
-  </section>
 
   <!-- ══ ESSAY SCREEN (作文句型) ══ -->
   <section id="essay-screen" class="screen">
     <div id="essay-topbar">
-      <span id="essay-counter">1 / 44</span>
+      <span id="essay-counter">1 / 10</span>
       <span id="essay-category-badge">C1 引言句</span>
     </div>
 
     <div id="essay-card">
+      <div id="essay-zh-label">中文含義</div>
       <div id="essay-function">引出爭議話題</div>
+      <div id="essay-en-hint">請輸入以下英文句型（含底線 ___ ）</div>
       <div id="essay-target"></div>
     </div>
 
@@ -3835,6 +3765,8 @@
   let fallTimer  = null;
   let locked     = false;
 
+  const SPEED_TOTAL = 15;
+
   const $ = id => document.getElementById(id);
 
   function shuffle(arr) {
@@ -3887,12 +3819,12 @@
 
   /* ── Load next word ── */
   function nextWord() {
-    if (qIndex >= 10) { endGame(); return; }
+    if (qIndex >= SPEED_TOTAL) { endGame(); return; }
 
     locked  = false;
     current = queue[qIndex];
 
-    $('q-counter').textContent    = `${qIndex + 1} / 10`;
+    $('q-counter').textContent    = `${qIndex + 1} / ${SPEED_TOTAL}`;
     $('word-display').textContent = current.word;
     $('word-zh').textContent      = current.zh;
     $('word-hint').textContent    = current.hint;
@@ -3970,18 +3902,18 @@
     $('result-num').textContent = score;
 
     let grade, label;
-    if (score === 10) {
+    if (score === SPEED_TOTAL) {
       grade = '完美通關 ✦';
       label = 'Perfect — 無懈可擊！';
       setTimeout(() => playVictory(), 200);
-    } else if (score >= 8) {
+    } else if (score >= 13) {
       grade = '優秀成績';
       label = 'Excellent — 繼續保持！';
       setTimeout(() => playCorrect(), 200);
-    } else if (score >= 6) {
+    } else if (score >= 10) {
       grade = '良好表現';
       label = 'Good — 再接再厲！';
-    } else if (score >= 4) {
+    } else if (score >= 7) {
       grade = '尚可';
       label = '多練習幾次就能進步！';
     } else {
@@ -4004,7 +3936,7 @@
       });
     }
 
-    $('result-total').textContent       = ' / 10';
+    $('result-total').textContent       = ` / ${SPEED_TOTAL}`;
     $('missed-title').textContent       = '未過關單字';
     $('retry-btn').style.display        = '';
     $('change-diff-btn').style.display  = '';
@@ -4020,13 +3952,7 @@
     score      = 0;
     missed     = [];
     qIndex     = 0;
-    const reviewWarmup = shuffle(REVIEW_ITEMS).slice(0, 5).map(r => ({
-      word:  r.answer,
-      zh:    r.prompt,
-      hint:  r.category,
-      audio: null,
-    }));
-    queue = [...reviewWarmup, ...shuffle(WORDS).slice(0, 5)];
+    queue = shuffle(WORDS).slice(0, SPEED_TOTAL);
 
     const badge = name + ' · ' + sec + 's';
     $('diff-badge').textContent = badge;
@@ -4057,152 +3983,10 @@
   $('change-diff-btn').addEventListener('click', () => showScreen('start-screen'));
   $('retry-review-btn').addEventListener('click', () => {
     ensureAudio();
-    if (currentMode === 'review') startReview();
-    else startEssay();
+    startEssay();
   });
   $('back-home-btn').addEventListener('click', () => showScreen('start-screen'));
 
-  /* ══════════════════════════════════════════════════════
-     REVIEW MODE — 月份 & 星期
-  ══════════════════════════════════════════════════════ */
-
-  const REVIEW_ITEMS = [
-    { prompt: '一月',   answer: 'January',   category: '月份' },
-    { prompt: '二月',   answer: 'February',  category: '月份' },
-    { prompt: '三月',   answer: 'March',     category: '月份' },
-    { prompt: '四月',   answer: 'April',     category: '月份' },
-    { prompt: '五月',   answer: 'May',       category: '月份' },
-    { prompt: '六月',   answer: 'June',      category: '月份' },
-    { prompt: '七月',   answer: 'July',      category: '月份' },
-    { prompt: '八月',   answer: 'August',    category: '月份' },
-    { prompt: '九月',   answer: 'September', category: '月份' },
-    { prompt: '十月',   answer: 'October',   category: '月份' },
-    { prompt: '十一月', answer: 'November',  category: '月份' },
-    { prompt: '十二月', answer: 'December',  category: '月份' },
-    { prompt: '星期一', answer: 'Monday',    category: '星期' },
-    { prompt: '星期二', answer: 'Tuesday',   category: '星期' },
-    { prompt: '星期三', answer: 'Wednesday', category: '星期' },
-    { prompt: '星期四', answer: 'Thursday',  category: '星期' },
-    { prompt: '星期五', answer: 'Friday',    category: '星期' },
-    { prompt: '星期六', answer: 'Saturday',  category: '星期' },
-    { prompt: '星期日', answer: 'Sunday',    category: '星期' },
-  ];
-
-  let reviewIndex  = 0;
-  let reviewScore  = 0;
-  let reviewMissed = [];
-  let reviewLocked = false;
-
-  function startReview() {
-    ensureAudio();
-    currentMode  = 'review';
-    reviewIndex  = 0;
-    reviewScore  = 0;
-    reviewMissed = [];
-    showScreen('review-screen');
-    nextReviewItem();
-  }
-
-  function nextReviewItem() {
-    if (reviewIndex >= REVIEW_ITEMS.length) { endReview(); return; }
-    reviewLocked = false;
-    const item = REVIEW_ITEMS[reviewIndex];
-    $('review-counter').textContent  = `${reviewIndex + 1} / ${REVIEW_ITEMS.length}`;
-    $('review-badge').textContent    = '月份 & 星期';
-    $('review-category').textContent = item.category;
-    $('review-prompt').textContent   = item.prompt;
-    $('review-answer-reveal').textContent = '';
-    const card = $('review-card');
-    card.classList.remove('correct-flash', 'wrong-flash');
-    const inp = $('review-input');
-    inp.value     = '';
-    inp.className = '';
-    inp.focus();
-    speak(item.answer);
-  }
-
-  function reviewCorrect() {
-    if (reviewLocked) return;
-    reviewLocked = true;
-    reviewScore++;
-    playCorrect();
-    const item = REVIEW_ITEMS[reviewIndex];
-    const inp  = $('review-input');
-    inp.className = 'correct';
-    $('review-card').classList.add('correct-flash');
-    $('review-answer-reveal').textContent = '✓ ' + item.answer;
-    reviewIndex++;
-    setTimeout(() => nextReviewItem(), 750);
-  }
-
-  function reviewSkip() {
-    if (reviewLocked) return;
-    reviewLocked = true;
-    const item = REVIEW_ITEMS[reviewIndex];
-    reviewMissed.push(item);
-    playWrong();
-    $('review-card').classList.add('wrong-flash');
-    $('review-answer-reveal').textContent = item.answer;
-    reviewIndex++;
-    setTimeout(() => nextReviewItem(), 1000);
-  }
-
-  function reviewWrongFlash() {
-    const inp  = $('review-input');
-    const card = $('review-card');
-    inp.className  = 'wrong';
-    card.classList.add('wrong-flash');
-    playWrong();
-    setTimeout(() => {
-      inp.className = '';
-      card.classList.remove('wrong-flash');
-      inp.value = '';
-    }, 500);
-  }
-
-  $('review-input').addEventListener('input', e => {
-    if (reviewLocked) return;
-    const typed  = e.target.value;
-    const item   = REVIEW_ITEMS[reviewIndex];
-    if (!item) return;
-    playTick();
-    if (typed.toLowerCase() === item.answer.toLowerCase()) {
-      reviewCorrect();
-    }
-  });
-
-  $('review-skip-btn').addEventListener('click', () => reviewSkip());
-
-  function endReview() {
-    currentMode = 'review-done';
-    showScreen('result-screen');
-    $('result-grade').textContent = '複習完成 ✦';
-    $('result-num').textContent   = reviewScore;
-    $('result-total').textContent = ` / ${REVIEW_ITEMS.length}`;
-    const skipped = reviewMissed.length;
-    $('result-label').textContent = skipped === 0
-      ? '全部正確！太強了 🎉' : `加油！還有 ${skipped} 題需要複習。`;
-    $('missed-title').textContent = '需要加強';
-    const list = $('missed-list');
-    list.innerHTML = '';
-    if (reviewMissed.length === 0) {
-      list.innerHTML = '<span class="no-missed">全數過關！太厲害了 🎉</span>';
-    } else {
-      reviewMissed.forEach(it => {
-        const chip = document.createElement('span');
-        chip.className   = 'missed-chip';
-        chip.textContent = `${it.prompt} → ${it.answer}`;
-        chip.style.fontSize = '0.78rem';
-        list.appendChild(chip);
-      });
-    }
-    $('retry-btn').style.display        = 'none';
-    $('change-diff-btn').style.display  = 'none';
-    $('retry-review-btn').style.display = '';
-    $('retry-review-btn').textContent   = '再練一次';
-    $('back-home-btn').style.display    = '';
-    if (reviewScore === REVIEW_ITEMS.length) setTimeout(() => playVictory(), 200);
-  }
 
   /* ══════════════════════════════════════════════════════
      ESSAY MODE — 作文句型練習
@@ -4255,6 +4039,9 @@
     { fn: '比較兩項數據',   cat: 'C7 圖表作文', target: 'While ___ showed an upward trend, ___ followed the opposite pattern.' },
   ];
 
+  const ESSAY_PER_ROUND = 10;
+  let essayQueue  = [];
+
   let essayIndex  = 0;
   let essayScore  = 0;
   let essaySkips  = 0;
@@ -4270,15 +4057,16 @@
     essayIndex  = 0;
     essayScore  = 0;
     essaySkips  = 0;
+    essayQueue  = shuffle(ESSAY_PHRASES).slice(0, ESSAY_PER_ROUND);
     showScreen('essay-screen');
     nextEssayPhrase();
   }
 
   function nextEssayPhrase() {
-    if (essayIndex >= ESSAY_PHRASES.length) { endEssay(); return; }
+    if (essayIndex >= essayQueue.length) { endEssay(); return; }
     essayLocked = false;
-    const ph = ESSAY_PHRASES[essayIndex];
-    $('essay-counter').textContent        = `${essayIndex + 1} / ${ESSAY_PHRASES.length}`;
+    const ph = essayQueue[essayIndex];
+    $('essay-counter').textContent        = `${essayIndex + 1} / ${essayQueue.length}`;
     $('essay-category-badge').textContent = ph.cat;
     $('essay-function').textContent       = ph.fn;
     $('essay-status').textContent         = '';
@@ -4292,7 +4080,7 @@
   }
 
   function renderEssayTarget(typed) {
-    const target = ESSAY_PHRASES[essayIndex].target;
+    const target = essayQueue[essayIndex].target;
     let html = '';
     for (let i = 0; i < target.length; i++) {
       const ch = escHtml(target[i]);
@@ -4314,7 +4102,7 @@
 
   $('essay-input').addEventListener('input', e => {
     if (essayLocked) return;
-    const ph    = ESSAY_PHRASES[essayIndex];
+    const ph    = essayQueue[essayIndex];
     if (!ph) return;
     const typed = e.target.value;
     renderEssayTarget(typed);
@@ -4348,7 +4136,7 @@
     showScreen('result-screen');
     $('result-grade').textContent = '句型練習完成';
     $('result-num').textContent   = essayScore;
-    $('result-total').textContent = ` / ${ESSAY_PHRASES.length}`;
+    $('result-total').textContent = ` / ${ESSAY_PER_ROUND}`;
     $('result-label').textContent = essaySkips === 0
       ? '全部完成！語感一流 🎉'
       : `完成 ${essayScore} 題，跳過 ${essaySkips} 題。`;
@@ -4365,11 +4153,10 @@
     $('retry-review-btn').style.display = '';
     $('retry-review-btn').textContent   = '再練一次';
     $('back-home-btn').style.display    = '';
-    if (essayScore === ESSAY_PHRASES.length) setTimeout(() => playVictory(), 200);
+    if (essayScore === ESSAY_PER_ROUND) setTimeout(() => playVictory(), 200);
   }
 
   /* ── Mode buttons ── */
-  $('review-mode-btn').addEventListener('click', () => startReview());
   $('essay-mode-btn').addEventListener('click',  () => startEssay());
 
   /* ── currentMode tracking for result screen ── */
