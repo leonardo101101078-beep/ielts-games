@@ -3768,21 +3768,41 @@
   ══════════════════════════════════════════════ */
   let currentAudio = null;
 
-  function speakOnline(word) {
-    const gb = `https://ssl.gstatic.com/dictionary/static/sounds/oxford/${word}--_gb_1.mp3`;
-    const us = `https://ssl.gstatic.com/dictionary/static/sounds/oxford/${word}--_us_1.mp3`;
-    currentAudio = new Audio(gb);
-    currentAudio.play().catch(() => {
-      currentAudio = new Audio(us);
-      currentAudio.play().catch(() => {
-        if (!window.speechSynthesis) return;
-        speechSynthesis.cancel();
-        const utt = new SpeechSynthesisUtterance(word);
-        utt.lang = 'en-US';
-        utt.rate = 0.88;
-        speechSynthesis.speak(utt);
-      });
-    });
+  /* ── Voice selection (Web Speech fallback) ── */
+  let bestVoice = null;
+  function pickBestVoice() {
+    const preferred = ['Samantha', 'Daniel', 'Karen', 'Moira', 'Tessa', 'Fiona'];
+    const voices = speechSynthesis.getVoices();
+    for (const name of preferred) {
+      const v = voices.find(v => v.name.includes(name));
+      if (v) { bestVoice = v; return; }
+    }
+    bestVoice = voices.find(v => v.lang === 'en-US')
+             || voices.find(v => v.lang.startsWith('en'))
+             || null;
+  }
+  if (window.speechSynthesis) {
+    speechSynthesis.addEventListener('voiceschanged', pickBestVoice);
+    pickBestVoice();
+  }
+
+  async function speakOnline(word) {
+    try {
+      const res  = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      const url  = data[0]?.phonetics?.find(p => p.audio)?.audio;
+      if (!url) throw new Error();
+      currentAudio = new Audio(url.startsWith('//') ? 'https:' + url : url);
+      await currentAudio.play();
+      return;
+    } catch (_) {}
+    if (!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(word);
+    utt.lang  = 'en-US'; utt.rate = 0.85; utt.pitch = 1.0;
+    if (bestVoice) utt.voice = bestVoice;
+    speechSynthesis.speak(utt);
   }
 
   function speak(word) {
@@ -4000,7 +4020,13 @@
     score      = 0;
     missed     = [];
     qIndex     = 0;
-    queue      = shuffle(WORDS).slice(0, 10);
+    const reviewWarmup = shuffle(REVIEW_ITEMS).slice(0, 5).map(r => ({
+      word:  r.answer,
+      zh:    r.prompt,
+      hint:  r.category,
+      audio: null,
+    }));
+    queue = [...reviewWarmup, ...shuffle(WORDS).slice(0, 5)];
 
     const badge = name + ' · ' + sec + 's';
     $('diff-badge').textContent = badge;
