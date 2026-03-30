@@ -417,6 +417,145 @@
     }
     .btn-secondary:hover { border-color: var(--ink-soft); color: var(--ink); }
 
+    /* ══════════════════════════════
+       MORE MODES (start screen)
+    ══════════════════════════════ */
+    .mode-section { width: 100%; text-align: center; }
+    .mode-section-title {
+      font-size: 0.72rem; letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--ink-faint); font-weight: 600; margin-bottom: 12px;
+    }
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .mode-btn {
+      background: var(--card-bg); border-radius: var(--radius); padding: 18px 12px;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.07), 0 0 0 1.5px #E8E4DA;
+      transition: box-shadow .15s, transform .15s;
+    }
+    .mode-btn:hover {
+      box-shadow: 0 4px 16px rgba(0,0,0,.10), 0 0 0 1.5px var(--gold);
+      transform: translateY(-2px);
+    }
+    .mode-btn:active { transform: translateY(0); }
+    .mode-btn .mode-icon { font-size: 1.5rem; }
+    .mode-btn .mode-name { font-size: 0.88rem; font-weight: 700; color: var(--ink); }
+    .mode-btn .mode-sub { font-size: 0.7rem; color: var(--ink-faint); letter-spacing: 0.06em; }
+
+    /* ══════════════════════════════
+       REVIEW SCREEN (月份 + 星期)
+    ══════════════════════════════ */
+    #review-screen { gap: 24px; width: 100%; }
+    #review-topbar {
+      width: 100%; display: flex; justify-content: space-between;
+      align-items: center; padding: 0 4px;
+    }
+    #review-counter {
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--ink-soft);
+    }
+    #review-badge {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.1em;
+      padding: 3px 10px; border-radius: 20px;
+      background: var(--gold-pale); color: var(--gold);
+    }
+    #review-card {
+      width: 100%; background: var(--card-bg); border-radius: var(--radius);
+      padding: 44px 24px; text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06), 0 0 0 1.5px #E8E4DA;
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      transition: background .25s;
+    }
+    #review-card.correct-flash { background: var(--green-pale); }
+    #review-card.wrong-flash   { background: var(--red-pale); }
+    #review-category {
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em;
+      color: var(--ink-faint); font-weight: 600;
+    }
+    #review-prompt {
+      font-size: 3rem; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; line-height: 1.1;
+    }
+    #review-answer-reveal { font-size: 1.1rem; color: var(--green); font-weight: 600; min-height: 1.5em; }
+    #review-input-area { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+    #review-input {
+      width: 100%; background: var(--card-bg); border: 2px solid #E8E4DA;
+      border-radius: var(--radius); padding: 14px 18px; font-size: 1.15rem;
+      font-family: inherit; color: var(--ink); text-align: center;
+      outline: none; transition: border-color .2s;
+    }
+    #review-input:focus  { border-color: var(--gold); }
+    #review-input.correct { border-color: var(--green); background: var(--green-pale); }
+    #review-input.wrong   { border-color: var(--red);   background: var(--red-pale);
+      animation: input-shake .3s ease; }
+    #review-hint { font-size: 0.75rem; color: var(--ink-faint); text-align: center; letter-spacing: 0.06em; }
+    #review-skip-btn {
+      background: none; color: var(--ink-faint); font-size: 0.8rem;
+      padding: 6px 12px; border-radius: 8px; text-decoration: underline; align-self: center;
+    }
+    #review-skip-btn:hover { color: var(--ink-soft); }
+
+    /* ══════════════════════════════
+       ESSAY SCREEN
+    ══════════════════════════════ */
+    #essay-screen { gap: 18px; width: 100%; }
+    #essay-topbar {
+      width: 100%; display: flex; justify-content: space-between;
+      align-items: center; padding: 0 4px;
+    }
+    #essay-counter {
+      font-size: 0.78rem; font-weight: 700; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--ink-soft);
+    }
+    #essay-category-badge {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em;
+      padding: 3px 10px; border-radius: 20px;
+      background: var(--gold-pale); color: var(--gold);
+    }
+    #essay-card {
+      width: 100%; background: var(--card-bg); border-radius: var(--radius);
+      padding: 22px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06), 0 0 0 1.5px #E8E4DA;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    #essay-function {
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.14em;
+      color: var(--ink-faint); font-weight: 600;
+    }
+    #essay-target {
+      font-size: 1.05rem; line-height: 1.75;
+      font-family: 'Georgia', 'Times New Roman', serif;
+      color: #C8C4BA; letter-spacing: 0.01em; word-break: break-word;
+    }
+    #essay-target .t-ok  { color: var(--ink); }
+    #essay-target .t-err { color: var(--red); background: var(--red-pale); border-radius: 2px; }
+    #essay-target .t-cur { border-left: 2px solid var(--gold); margin-left: 1px;
+      animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { border-left-color: transparent; } }
+    #essay-progress-wrap {
+      width: 100%; height: 3px; background: #E8E4DA; border-radius: 2px; overflow: hidden;
+    }
+    #essay-progress-fill {
+      height: 100%; background: var(--gold); border-radius: 2px;
+      transition: width .12s; width: 0%;
+    }
+    #essay-input-area { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+    #essay-input {
+      width: 100%; background: var(--card-bg); border: 2px solid #E8E4DA;
+      border-radius: var(--radius); padding: 12px 16px; font-size: 0.95rem;
+      font-family: inherit; color: var(--ink); outline: none; transition: border-color .2s;
+    }
+    #essay-input:focus   { border-color: var(--gold); }
+    #essay-input.correct { border-color: var(--green); background: var(--green-pale); }
+    #essay-char-count { font-size: 0.72rem; color: var(--ink-faint); text-align: right; }
+    .essay-bottom {
+      width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    #essay-skip-btn {
+      background: none; color: var(--ink-faint); font-size: 0.8rem;
+      padding: 6px 12px; border-radius: 8px; text-decoration: underline;
+    }
+    #essay-skip-btn:hover { color: var(--ink-soft); }
+    #essay-status { font-size: 0.8rem; color: var(--ink-faint); }
+
     /* ── transitions ── */
     .screen { animation: fade-in .25s ease; }
     @keyframes fade-in {
@@ -424,13 +563,20 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* ── shake animation ── */
+    /* ── shake animations ── */
     @keyframes shake {
       0%,100% { transform: translateX(-50%); }
       20%     { transform: translateX(calc(-50% - 8px)); }
       40%     { transform: translateX(calc(-50% + 8px)); }
       60%     { transform: translateX(calc(-50% - 6px)); }
       80%     { transform: translateX(calc(-50% + 4px)); }
+    }
+    @keyframes input-shake {
+      0%,100% { transform: translateX(0); }
+      20%     { transform: translateX(-8px); }
+      40%     { transform: translateX(8px); }
+      60%     { transform: translateX(-6px); }
+      80%     { transform: translateX(4px); }
     }
     #word-card.shake { animation: shake .35s ease !important; }
   </style>
@@ -466,6 +612,22 @@
         <span class="diff-sec">5</span>
         <span class="diff-unit">秒 / 題</span>
       </button>
+    </div>
+
+    <div class="mode-section">
+      <div class="mode-section-title">更多練習模式</div>
+      <div class="mode-grid">
+        <button class="mode-btn" id="review-mode-btn">
+          <span class="mode-icon">📅</span>
+          <span class="mode-name">月份 &amp; 星期</span>
+          <span class="mode-sub">無計時複習</span>
+        </button>
+        <button class="mode-btn" id="essay-mode-btn">
+          <span class="mode-icon">✍️</span>
+          <span class="mode-name">作文句型</span>
+          <span class="mode-sub">句型打字練習</span>
+        </button>
+      </div>
     </div>
   </section>
 
@@ -509,18 +671,78 @@
   <section id="result-screen" class="screen">
     <div class="result-header">
       <div class="result-grade" id="result-grade">得分</div>
-      <div class="result-score"><span id="result-num">0</span> / 10</div>
+      <div class="result-score"><span id="result-num">0</span><span id="result-total"> / 10</span></div>
       <div class="result-label" id="result-label">繼續加油！</div>
     </div>
 
     <div class="missed-section">
-      <div class="missed-title">未過關單字</div>
+      <div class="missed-title" id="missed-title">未過關單字</div>
       <div class="missed-list" id="missed-list"></div>
     </div>
 
     <div class="result-actions">
-      <button class="btn-primary" id="retry-btn">再玩一次（同難度）</button>
+      <button class="btn-primary"   id="retry-btn">再玩一次（同難度）</button>
       <button class="btn-secondary" id="change-diff-btn">更換難度</button>
+      <button class="btn-primary"   id="retry-review-btn" style="display:none">再練一次</button>
+      <button class="btn-secondary" id="back-home-btn"    style="display:none">回首頁</button>
+    </div>
+  </section>
+
+  <!-- ══ REVIEW SCREEN (月份 + 星期) ══ -->
+  <section id="review-screen" class="screen">
+    <div id="review-topbar">
+      <span id="review-counter">1 / 19</span>
+      <span id="review-badge">月份 &amp; 星期</span>
+    </div>
+
+    <div id="review-card">
+      <div id="review-category">月份</div>
+      <div id="review-prompt">一月</div>
+      <div id="review-answer-reveal"></div>
+    </div>
+
+    <div id="review-input-area">
+      <input
+        id="review-input"
+        type="text"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        placeholder="輸入英文…"
+      />
+      <div id="review-hint">完整輸入後自動判定，不需按 Enter</div>
+    </div>
+
+    <button id="review-skip-btn">跳過此題</button>
+  </section>
+
+  <!-- ══ ESSAY SCREEN (作文句型) ══ -->
+  <section id="essay-screen" class="screen">
+    <div id="essay-topbar">
+      <span id="essay-counter">1 / 44</span>
+      <span id="essay-category-badge">C1 引言句</span>
+    </div>
+
+    <div id="essay-card">
+      <div id="essay-function">引出爭議話題</div>
+      <div id="essay-target"></div>
+    </div>
+
+    <div id="essay-progress-wrap">
+      <div id="essay-progress-fill"></div>
+    </div>
+
+    <div id="essay-input-area">
+      <input
+        id="essay-input"
+        type="text"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        placeholder="照著上方句型逐字輸入（含底線 ___ ）…"
+      />
+      <div id="essay-char-count">0 / 0</div>
+    </div>
+
+    <div class="essay-bottom">
+      <button id="essay-skip-btn">跳過此題</button>
+      <span id="essay-status"></span>
     </div>
   </section>
 
@@ -3761,6 +3983,13 @@
         list.appendChild(chip);
       });
     }
+
+    $('result-total').textContent       = ' / 10';
+    $('missed-title').textContent       = '未過關單字';
+    $('retry-btn').style.display        = '';
+    $('change-diff-btn').style.display  = '';
+    $('retry-review-btn').style.display = 'none';
+    $('back-home-btn').style.display    = 'none';
   }
 
   /* ── Start game ── */
@@ -3800,6 +4029,325 @@
     startGame(difficulty, diffName);
   });
   $('change-diff-btn').addEventListener('click', () => showScreen('start-screen'));
+  $('retry-review-btn').addEventListener('click', () => {
+    ensureAudio();
+    if (currentMode === 'review') startReview();
+    else startEssay();
+  });
+  $('back-home-btn').addEventListener('click', () => showScreen('start-screen'));
+
+  /* ══════════════════════════════════════════════════════
+     REVIEW MODE — 月份 & 星期
+  ══════════════════════════════════════════════════════ */
+
+  const REVIEW_ITEMS = [
+    { prompt: '一月',   answer: 'January',   category: '月份' },
+    { prompt: '二月',   answer: 'February',  category: '月份' },
+    { prompt: '三月',   answer: 'March',     category: '月份' },
+    { prompt: '四月',   answer: 'April',     category: '月份' },
+    { prompt: '五月',   answer: 'May',       category: '月份' },
+    { prompt: '六月',   answer: 'June',      category: '月份' },
+    { prompt: '七月',   answer: 'July',      category: '月份' },
+    { prompt: '八月',   answer: 'August',    category: '月份' },
+    { prompt: '九月',   answer: 'September', category: '月份' },
+    { prompt: '十月',   answer: 'October',   category: '月份' },
+    { prompt: '十一月', answer: 'November',  category: '月份' },
+    { prompt: '十二月', answer: 'December',  category: '月份' },
+    { prompt: '星期一', answer: 'Monday',    category: '星期' },
+    { prompt: '星期二', answer: 'Tuesday',   category: '星期' },
+    { prompt: '星期三', answer: 'Wednesday', category: '星期' },
+    { prompt: '星期四', answer: 'Thursday',  category: '星期' },
+    { prompt: '星期五', answer: 'Friday',    category: '星期' },
+    { prompt: '星期六', answer: 'Saturday',  category: '星期' },
+    { prompt: '星期日', answer: 'Sunday',    category: '星期' },
+  ];
+
+  let reviewIndex  = 0;
+  let reviewScore  = 0;
+  let reviewMissed = [];
+  let reviewLocked = false;
+
+  function startReview() {
+    ensureAudio();
+    currentMode  = 'review';
+    reviewIndex  = 0;
+    reviewScore  = 0;
+    reviewMissed = [];
+    showScreen('review-screen');
+    nextReviewItem();
+  }
+
+  function nextReviewItem() {
+    if (reviewIndex >= REVIEW_ITEMS.length) { endReview(); return; }
+    reviewLocked = false;
+    const item = REVIEW_ITEMS[reviewIndex];
+    $('review-counter').textContent  = `${reviewIndex + 1} / ${REVIEW_ITEMS.length}`;
+    $('review-badge').textContent    = '月份 & 星期';
+    $('review-category').textContent = item.category;
+    $('review-prompt').textContent   = item.prompt;
+    $('review-answer-reveal').textContent = '';
+    const card = $('review-card');
+    card.classList.remove('correct-flash', 'wrong-flash');
+    const inp = $('review-input');
+    inp.value     = '';
+    inp.className = '';
+    inp.focus();
+    speak(item.answer);
+  }
+
+  function reviewCorrect() {
+    if (reviewLocked) return;
+    reviewLocked = true;
+    reviewScore++;
+    playCorrect();
+    const item = REVIEW_ITEMS[reviewIndex];
+    const inp  = $('review-input');
+    inp.className = 'correct';
+    $('review-card').classList.add('correct-flash');
+    $('review-answer-reveal').textContent = '✓ ' + item.answer;
+    reviewIndex++;
+    setTimeout(() => nextReviewItem(), 750);
+  }
+
+  function reviewSkip() {
+    if (reviewLocked) return;
+    reviewLocked = true;
+    const item = REVIEW_ITEMS[reviewIndex];
+    reviewMissed.push(item);
+    playWrong();
+    $('review-card').classList.add('wrong-flash');
+    $('review-answer-reveal').textContent = item.answer;
+    reviewIndex++;
+    setTimeout(() => nextReviewItem(), 1000);
+  }
+
+  function reviewWrongFlash() {
+    const inp  = $('review-input');
+    const card = $('review-card');
+    inp.className  = 'wrong';
+    card.classList.add('wrong-flash');
+    playWrong();
+    setTimeout(() => {
+      inp.className = '';
+      card.classList.remove('wrong-flash');
+      inp.value = '';
+    }, 500);
+  }
+
+  $('review-input').addEventListener('input', e => {
+    if (reviewLocked) return;
+    const typed  = e.target.value;
+    const item   = REVIEW_ITEMS[reviewIndex];
+    if (!item) return;
+    playTick();
+    if (typed.toLowerCase() === item.answer.toLowerCase()) {
+      reviewCorrect();
+    }
+  });
+
+  $('review-skip-btn').addEventListener('click', () => reviewSkip());
+
+  function endReview() {
+    currentMode = 'review-done';
+    showScreen('result-screen');
+    $('result-grade').textContent = '複習完成 ✦';
+    $('result-num').textContent   = reviewScore;
+    $('result-total').textContent = ` / ${REVIEW_ITEMS.length}`;
+    const skipped = reviewMissed.length;
+    $('result-label').textContent = skipped === 0
+      ? '全部正確！太強了 🎉' : `加油！還有 ${skipped} 題需要複習。`;
+    $('missed-title').textContent = '需要加強';
+    const list = $('missed-list');
+    list.innerHTML = '';
+    if (reviewMissed.length === 0) {
+      list.innerHTML = '<span class="no-missed">全數過關！太厲害了 🎉</span>';
+    } else {
+      reviewMissed.forEach(it => {
+        const chip = document.createElement('span');
+        chip.className   = 'missed-chip';
+        chip.textContent = `${it.prompt} → ${it.answer}`;
+        chip.style.fontSize = '0.78rem';
+        list.appendChild(chip);
+      });
+    }
+    $('retry-btn').style.display        = 'none';
+    $('change-diff-btn').style.display  = 'none';
+    $('retry-review-btn').style.display = '';
+    $('retry-review-btn').textContent   = '再練一次';
+    $('back-home-btn').style.display    = '';
+    if (reviewScore === REVIEW_ITEMS.length) setTimeout(() => playVictory(), 200);
+  }
+
+  /* ══════════════════════════════════════════════════════
+     ESSAY MODE — 作文句型練習
+  ══════════════════════════════════════════════════════ */
+
+  const ESSAY_PHRASES = [
+    { fn: '引出爭議話題',   cat: 'C1 引言句',   target: 'The question of whether ___ has sparked heated debate in recent years.' },
+    { fn: '點出社會現象',   cat: 'C1 引言句',   target: 'The phenomenon of ___ has become increasingly prevalent in modern society.' },
+    { fn: '陳述普遍看法',   cat: 'C1 引言句',   target: 'It is widely acknowledged that ___ plays a significant role in ___ .' },
+    { fn: '提出對立觀點',   cat: 'C1 引言句',   target: 'While some people argue that ___ , others contend that ___ .' },
+    { fn: '點出問題背景',   cat: 'C1 引言句',   target: 'In recent decades, ___ has emerged as one of the most pressing issues facing ___ .' },
+    { fn: '表明個人觀點',   cat: 'C2 表達立場', target: 'From my perspective, ___ .' },
+    { fn: '強調個人立場',   cat: 'C2 表達立場', target: 'I firmly believe that ___ .' },
+    { fn: '部分同意',       cat: 'C2 表達立場', target: 'While it is true that ___ , it does not necessarily mean that ___ .' },
+    { fn: '讓步後反駁',     cat: 'C2 表達立場', target: 'Despite the common belief that ___ , evidence suggests otherwise.' },
+    { fn: '指出常見誤解',   cat: 'C2 表達立場', target: 'It is often assumed that ___ ; however, this view overlooks the fact that ___ .' },
+    { fn: '提出主論點',     cat: 'C3 論點展開', target: 'One of the most compelling arguments in favour of ___ is that ___ .' },
+    { fn: '歸因分析',       cat: 'C3 論點展開', target: 'The advantage of this trend can be largely attributed to the fact that ___ .' },
+    { fn: '常見論據',       cat: 'C3 論點展開', target: 'It is often argued that ___ .' },
+    { fn: '提出直接後果',   cat: 'C3 論點展開', target: 'A direct consequence of this is that ___ .' },
+    { fn: '推斷後續影響',   cat: 'C3 論點展開', target: 'Consequently, it is highly likely that ___ .' },
+    { fn: '強調重要性',     cat: 'C3 論點展開', target: 'It is worth noting that ___ has a profound impact on ___ .' },
+    { fn: '舉例支撐',       cat: 'C3 論點展開', target: 'For instance, studies have shown that ___ .' },
+    { fn: '數據佐證',       cat: 'C3 論點展開', target: 'The number of ___ has risen sharply over the past decade.' },
+    { fn: '對比兩方',       cat: 'C3 論點展開', target: 'In contrast, ___ tends to ___ , whereas ___ is more likely to ___ .' },
+    { fn: '類比說明',       cat: 'C3 論點展開', target: 'This is analogous to ___ , where ___ .' },
+    { fn: '承認反方觀點',   cat: 'C4 反駁與讓步', target: 'Admittedly, there are those who argue that ___ .' },
+    { fn: '指出反方局限',   cat: 'C4 反駁與讓步', target: 'However, this argument fails to take into account ___ .' },
+    { fn: '讓步轉折',       cat: 'C4 反駁與讓步', target: 'Although ___ may seem advantageous at first glance, it is important to recognise that ___ .' },
+    { fn: '否定極端立場',   cat: 'C4 反駁與讓步', target: 'It would be an overstatement to claim that ___ .' },
+    { fn: '平衡兩方',       cat: 'C4 反駁與讓步', target: 'On the one hand, ___ . On the other hand, ___ .' },
+    { fn: '說明原因',       cat: 'C5 因果與趨勢', target: 'This can be explained by the fact that ___ .' },
+    { fn: '指出多重原因',   cat: 'C5 因果與趨勢', target: 'There are several factors that contribute to ___ .' },
+    { fn: '強調關鍵驅動力', cat: 'C5 因果與趨勢', target: 'The primary driving force behind ___ is ___ .' },
+    { fn: '描述趨勢加速',   cat: 'C5 因果與趨勢', target: 'This trend is further accelerated by ___ .' },
+    { fn: '預測未來走向',   cat: 'C5 因果與趨勢', target: 'If this trend continues, it is foreseeable that ___ .' },
+    { fn: '總體概述',       cat: 'C6 總結與結論', target: 'Overall, it is clear that ___ .' },
+    { fn: '簡短總結',       cat: 'C6 總結與結論', target: 'In brief, ___ .' },
+    { fn: '歸納主要趨勢',   cat: 'C6 總結與結論', target: 'To summarise the main trends, ___ .' },
+    { fn: '重申立場',       cat: 'C6 總結與結論', target: 'In conclusion, I would argue that ___ .' },
+    { fn: '另一結論寫法',   cat: 'C6 總結與結論', target: 'To sum up, the evidence strongly suggests that ___ .' },
+    { fn: '提出建議',       cat: 'C6 總結與結論', target: 'It is therefore recommended that ___ .' },
+    { fn: '展望未來',       cat: 'C6 總結與結論', target: 'Looking ahead, it is essential that ___ in order to ___ .' },
+    { fn: '強調核心訊息',   cat: 'C6 總結與結論', target: 'The key takeaway from this discussion is that ___ .' },
+    { fn: '描述整體概況',   cat: 'C7 圖表作文', target: 'Overall, the most striking feature of the graph is that ___ .' },
+    { fn: '描述最高值',     cat: 'C7 圖表作文', target: '___ accounted for the highest proportion of ___ , at approximately ___ .' },
+    { fn: '描述顯著增長',   cat: 'C7 圖表作文', target: 'There was a dramatic increase in ___ , rising from ___ to ___ .' },
+    { fn: '描述顯著下降',   cat: 'C7 圖表作文', target: 'Conversely, ___ experienced a sharp decline, falling from ___ to ___ .' },
+    { fn: '描述穩定趨勢',   cat: 'C7 圖表作文', target: '___ remained relatively stable throughout the period, hovering around ___ .' },
+    { fn: '比較兩項數據',   cat: 'C7 圖表作文', target: 'While ___ showed an upward trend, ___ followed the opposite pattern.' },
+  ];
+
+  let essayIndex  = 0;
+  let essayScore  = 0;
+  let essaySkips  = 0;
+  let essayLocked = false;
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function startEssay() {
+    ensureAudio();
+    currentMode = 'essay';
+    essayIndex  = 0;
+    essayScore  = 0;
+    essaySkips  = 0;
+    showScreen('essay-screen');
+    nextEssayPhrase();
+  }
+
+  function nextEssayPhrase() {
+    if (essayIndex >= ESSAY_PHRASES.length) { endEssay(); return; }
+    essayLocked = false;
+    const ph = ESSAY_PHRASES[essayIndex];
+    $('essay-counter').textContent        = `${essayIndex + 1} / ${ESSAY_PHRASES.length}`;
+    $('essay-category-badge').textContent = ph.cat;
+    $('essay-function').textContent       = ph.fn;
+    $('essay-status').textContent         = '';
+    const inp = $('essay-input');
+    inp.value     = '';
+    inp.className = '';
+    $('essay-char-count').textContent = `0 / ${ph.target.length}`;
+    $('essay-progress-fill').style.width = '0%';
+    renderEssayTarget('');
+    inp.focus();
+  }
+
+  function renderEssayTarget(typed) {
+    const target = ESSAY_PHRASES[essayIndex].target;
+    let html = '';
+    for (let i = 0; i < target.length; i++) {
+      const ch = escHtml(target[i]);
+      if (i < typed.length) {
+        html += typed[i] === target[i]
+          ? `<span class="t-ok">${ch}</span>`
+          : `<span class="t-err">${ch}</span>`;
+      } else if (i === typed.length) {
+        html += `<span class="t-cur"></span>${ch}`;
+      } else {
+        html += ch;
+      }
+    }
+    $('essay-target').innerHTML = html;
+    const pct = Math.min(100, (typed.length / target.length) * 100);
+    $('essay-progress-fill').style.width = pct + '%';
+    $('essay-char-count').textContent = `${typed.length} / ${target.length}`;
+  }
+
+  $('essay-input').addEventListener('input', e => {
+    if (essayLocked) return;
+    const ph    = ESSAY_PHRASES[essayIndex];
+    if (!ph) return;
+    const typed = e.target.value;
+    renderEssayTarget(typed);
+    playTick();
+
+    if (typed === ph.target) {
+      essayLocked = true;
+      essayScore++;
+      playCorrect();
+      $('essay-input').className = 'correct';
+      $('essay-status').textContent = '✓ 正確！';
+      $('essay-status').style.color = 'var(--green)';
+      essayIndex++;
+      setTimeout(() => nextEssayPhrase(), 800);
+    }
+  });
+
+  $('essay-skip-btn').addEventListener('click', () => {
+    if (essayLocked) return;
+    essayLocked = true;
+    essaySkips++;
+    playWrong();
+    $('essay-status').textContent = '已跳過';
+    $('essay-status').style.color = 'var(--ink-faint)';
+    essayIndex++;
+    setTimeout(() => nextEssayPhrase(), 500);
+  });
+
+  function endEssay() {
+    currentMode = 'essay-done';
+    showScreen('result-screen');
+    $('result-grade').textContent = '句型練習完成';
+    $('result-num').textContent   = essayScore;
+    $('result-total').textContent = ` / ${ESSAY_PHRASES.length}`;
+    $('result-label').textContent = essaySkips === 0
+      ? '全部完成！語感一流 🎉'
+      : `完成 ${essayScore} 題，跳過 ${essaySkips} 題。`;
+    $('missed-title').textContent = '本次跳過的題目';
+    const list = $('missed-list');
+    list.innerHTML = '';
+    if (essaySkips === 0) {
+      list.innerHTML = '<span class="no-missed">全數完成！太厲害了 🎉</span>';
+    } else {
+      list.innerHTML = `<span style="font-size:.8rem;color:var(--ink-soft)">跳過 ${essaySkips} 題，建議重練一次鞏固記憶。</span>`;
+    }
+    $('retry-btn').style.display        = 'none';
+    $('change-diff-btn').style.display  = 'none';
+    $('retry-review-btn').style.display = '';
+    $('retry-review-btn').textContent   = '再練一次';
+    $('back-home-btn').style.display    = '';
+    if (essayScore === ESSAY_PHRASES.length) setTimeout(() => playVictory(), 200);
+  }
+
+  /* ── Mode buttons ── */
+  $('review-mode-btn').addEventListener('click', () => startReview());
+  $('essay-mode-btn').addEventListener('click',  () => startEssay());
+
+  /* ── currentMode tracking for result screen ── */
+  let currentMode = 'speed';
 </script>
 
 <script>
