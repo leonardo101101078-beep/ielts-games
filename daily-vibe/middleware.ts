@@ -49,16 +49,30 @@ export async function middleware(request: NextRequest) {
   if (!user && !isPublicPath) {
     const loginUrl = request.nextUrl.clone()
     loginUrl.pathname = '/login'
-    return NextResponse.redirect(loginUrl)
+    const res = NextResponse.redirect(loginUrl)
+    res.headers.set(
+      'Cache-Control',
+      'private, no-cache, no-store, must-revalidate',
+    )
+    return res
   }
 
   // Authenticated users visiting /login or /register → redirect to home
   if (user && (pathname === '/login' || pathname === '/register')) {
     const homeUrl = request.nextUrl.clone()
     homeUrl.pathname = '/'
-    return NextResponse.redirect(homeUrl)
+    const res = NextResponse.redirect(homeUrl)
+    res.headers.set(
+      'Cache-Control',
+      'private, no-cache, no-store, must-revalidate',
+    )
+    return res
   }
 
+  supabaseResponse.headers.set(
+    'Cache-Control',
+    'private, no-cache, no-store, must-revalidate',
+  )
   return supabaseResponse
 }
 

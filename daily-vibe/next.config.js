@@ -8,7 +8,15 @@ const withPWA = require('@ducanh2912/next-pwa').default({
   // App Router + aggressive nav caching can serve stale/empty shells → blank white page.
   cacheOnFrontEndNav: false,
   aggressiveFrontEndNavCaching: false,
+  // Avoid precaching "/" and the NetworkFirst "start-url" rule — they caused stale HTML after deploy.
+  cacheStartUrl: false,
+  dynamicStartUrl: false,
   runtimeCaching: [
+    {
+      // HTML navigations: always network (no stale shell after refresh / new deploy).
+      urlPattern: ({ request }) => request.mode === 'navigate',
+      handler: 'NetworkOnly',
+    },
     {
       // Cache Supabase REST API calls with NetworkFirst strategy
       urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*/i,
