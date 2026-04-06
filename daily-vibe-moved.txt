@@ -1,0 +1,3 @@
+DailyVibe 已改為獨立倉庫維護，請勿再放回 ielts-games 子目錄。
+
+Clone: git clone https://github.com/leonardo101101078-beep/daily-vibe.git
